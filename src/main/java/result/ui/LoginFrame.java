@@ -76,8 +76,16 @@ public class LoginFrame extends JFrame {
         setSize(1280, 760);
         setMinimumSize(new Dimension(960, 600));
         setResizable(true);
-        setLocationRelativeTo(null);
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+        try {
+            setLocationRelativeTo(null);
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            setExtendedState(JFrame.MAXIMIZED_BOTH);
+        } catch (Throwable ignored) {
+        }
 
         // Root full-screen background container
         CampusHallwayBackdropPanel mainContainer = new CampusHallwayBackdropPanel(new BorderLayout());
@@ -349,10 +357,16 @@ public class LoginFrame extends JFrame {
                     if (authenticated) {
                         setStatus("Login successful! Loading dashboard...", new Color(5, 150, 105));
                         DashboardFrame dashboard = new DashboardFrame(authService);
-                        dashboard.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                        try {
+                            dashboard.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                        } catch (Throwable ignored) {
+                        }
                         dashboard.setVisible(true);
-                        dashboard.toFront();
-                        dashboard.requestFocus();
+                        try {
+                            dashboard.toFront();
+                            dashboard.requestFocus();
+                        } catch (Throwable ignored) {
+                        }
                         dispose();
                     } else {
                         setStatus("Invalid username or password.", new Color(220, 38, 38));

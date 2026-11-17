@@ -102,8 +102,14 @@ public class DashboardFrame extends JFrame {
         setSize(1240, 820);
         setMinimumSize(new Dimension(1080, 700));
         setResizable(true);
-        setLocationRelativeTo(null);
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        try {
+            setLocationRelativeTo(null);
+        } catch (Throwable ignored) {
+        }
+        try {
+            setExtendedState(JFrame.MAXIMIZED_BOTH);
+        } catch (Throwable ignored) {
+        }
 
         JPanel mainContainer = new JPanel(new BorderLayout());
         mainContainer.setBackground(UIConstants.BACKGROUND_COLOR);
