@@ -16,11 +16,13 @@ public class MainApplication {
         System.out.println("  Launching Student Result Management System...  ");
         System.out.println("==================================================");
 
-        // Pre-initialize database tables and seeds in background
+        // Pre-initialize database tables and seeds in background if desktop
         new Thread(() -> {
             try {
-                DatabaseInitializer.initializeDatabase();
-            } catch (Exception ignored) {
+                if (System.getProperty("cheerpj.version") == null) {
+                    DatabaseInitializer.initializeDatabase();
+                }
+            } catch (Throwable ignored) {
             }
         }).start();
 

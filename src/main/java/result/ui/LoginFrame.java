@@ -456,22 +456,34 @@ public class LoginFrame extends JFrame {
         private static BufferedImage bgImage;
 
         static {
-            loadBackgroundImage();
+            new Thread(() -> {
+                try {
+                    loadBackgroundImage();
+                } catch (Throwable ignored) {
+                }
+            }).start();
         }
 
         private static void loadBackgroundImage() {
-            try (InputStream in = LoginFrame.class.getResourceAsStream("/images/campus_bg.png")) {
-                if (in != null) {
-                    bgImage = ImageIO.read(in);
-                    return;
+            String[] resourceNames = {"/images/campus_bg.jpg", "/images/campus_crop_wide.jpg", "/images/campus_bg.png"};
+            for (String res : resourceNames) {
+                try (InputStream in = LoginFrame.class.getResourceAsStream(res)) {
+                    if (in != null) {
+                        BufferedImage img = ImageIO.read(in);
+                        if (img != null) {
+                            bgImage = img;
+                            return;
+                        }
+                    }
+                } catch (Throwable ignored) {
                 }
-            } catch (Exception ignored) {
             }
 
             String[] fallbackPaths = {
+                    "src/main/resources/images/campus_bg.jpg",
+                    "target/classes/images/campus_bg.jpg",
                     "src/main/resources/images/campus_bg.png",
                     "target/classes/images/campus_bg.png",
-                    "resources/images/campus_bg.png",
                     "campus_bg.png"
             };
 
@@ -479,11 +491,12 @@ public class LoginFrame extends JFrame {
                 File file = new File(path);
                 if (file.exists() && file.isFile()) {
                     try {
-                        bgImage = ImageIO.read(file);
-                        if (bgImage != null) {
+                        BufferedImage img = ImageIO.read(file);
+                        if (img != null) {
+                            bgImage = img;
                             return;
                         }
-                    } catch (Exception ignored) {
+                    } catch (Throwable ignored) {
                     }
                 }
             }
@@ -525,7 +538,7 @@ public class LoginFrame extends JFrame {
                 g2.setColor(new Color(0, 0, 0, 45));
                 g2.fillRect(0, 0, w, h);
             } else {
-                g2.setColor(new Color(110, 39, 43)); // Rich red pillar base fallback
+                g2.setPaint(new java.awt.GradientPaint(0, 0, new Color(15, 23, 42), w, h, new Color(30, 41, 59)));
                 g2.fillRect(0, 0, w, h);
             }
 
