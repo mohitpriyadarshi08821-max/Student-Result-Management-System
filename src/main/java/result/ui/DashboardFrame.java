@@ -99,16 +99,18 @@ public class DashboardFrame extends JFrame {
     private void initComponents() {
         setTitle(UIConstants.APP_TITLE + " - Administration Dashboard");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1240, 820);
-        setMinimumSize(new Dimension(1080, 700));
+        setSize(1024, 680);
+        setMinimumSize(new Dimension(800, 560));
         setResizable(true);
         try {
             setLocationRelativeTo(null);
         } catch (Throwable ignored) {
         }
-        try {
-            setExtendedState(JFrame.MAXIMIZED_BOTH);
-        } catch (Throwable ignored) {
+        if (!MainApplication.isBrowserEnvironment()) {
+            try {
+                setExtendedState(JFrame.MAXIMIZED_BOTH);
+            } catch (Throwable ignored) {
+            }
         }
 
         JPanel mainContainer = new JPanel(new BorderLayout());

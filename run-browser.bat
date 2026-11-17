@@ -12,7 +12,10 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo Starting local WebAssembly server and opening your web browser...
-start "" "http://localhost:8080"
-node web/server.js
-pause
+echo Starting local WebAssembly server...
+node web/server.js --open
+if %errorlevel% neq 0 (
+    echo.
+    echo [ERROR] Server encountered an error.
+    pause
+)

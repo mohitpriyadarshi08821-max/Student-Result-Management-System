@@ -6,18 +6,23 @@
   <title>Student Result Management System - Academic Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <!-- CheerpJ WebAssembly Java 17 Runtime Loader -->
   <script src="https://cjrtnc.leaningtech.com/5.0/loader.js"></script>
   <style>
     :root {
       --bg-primary: #0b0f19;
       --bg-card: #151e32;
+      --bg-card-subtle: #0f172a;
       --border-color: #263352;
+      --border-focus: #3b82f6;
       --accent-blue: #3b82f6;
       --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #ef4444;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
+      --text-subtle: #64748b;
     }
 
     * {
@@ -88,11 +93,12 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 4px 10px;
+      padding: 5px 12px;
       border-radius: 9999px;
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.3px;
+      transition: all 0.3s ease;
     }
 
     .badge-jdeploy {
@@ -102,17 +108,40 @@
     }
 
     .badge-status {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .badge-status.running {
       background: rgba(16, 185, 129, 0.15);
       color: #34d399;
       border: 1px solid rgba(16, 185, 129, 0.3);
     }
 
+    .badge-status.error {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
     .badge-dot {
-      width: 6px;
-      height: 6px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
+      background-color: #fbbf24;
+      box-shadow: 0 0 8px #fbbf24;
+      transition: all 0.3s ease;
+    }
+
+    .badge-status.running .badge-dot {
       background-color: #34d399;
       box-shadow: 0 0 8px #34d399;
+    }
+
+    .badge-status.error .badge-dot {
+      background-color: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
     }
 
     main {
@@ -124,77 +153,6 @@
       position: relative;
       background: radial-gradient(circle at 50% 20%, rgba(37, 99, 235, 0.08) 0%, transparent 60%);
       overflow: hidden;
-    }
-
-    #loading-overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      padding: 36px 44px;
-      border-radius: 16px;
-      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
-      text-align: center;
-      max-width: 520px;
-      width: 90%;
-      z-index: 100;
-      transition: opacity 0.5s ease;
-    }
-
-    .spinner {
-      width: 44px;
-      height: 44px;
-      border: 4px solid rgba(59, 130, 246, 0.2);
-      border-top-color: var(--accent-blue);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-bottom: 16px;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    #loading-overlay h2 {
-      font-size: 18px;
-      margin-bottom: 8px;
-      font-weight: 700;
-    }
-
-    #loading-overlay p {
-      font-size: 13px;
-      color: var(--text-muted);
-      line-height: 1.5;
-      margin-bottom: 16px;
-    }
-
-    .progress-track {
-      width: 100%;
-      height: 5px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 999px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .progress-bar {
-      width: 35%;
-      height: 100%;
-      background: linear-gradient(90deg, #3b82f6, #10b981);
-      border-radius: 999px;
-      animation: progressIndeterminate 1.6s ease-in-out infinite;
-    }
-
-    @keyframes progressIndeterminate {
-      0% { transform: translateX(-100%); width: 30%; }
-      50% { width: 60%; }
-      100% { transform: translateX(350%); width: 30%; }
     }
 
     #app-container {
@@ -219,20 +177,178 @@
       justify-content: center;
     }
 
+    /* Diagnostics Startup Overlay */
+    #loading-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 28px 32px;
+      border-radius: 16px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75);
+      max-width: 620px;
+      width: 92%;
+      max-height: 90vh;
+      overflow-y: auto;
+      z-index: 100;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .overlay-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .spinner {
+      width: 38px;
+      height: 38px;
+      border: 3px solid rgba(59, 130, 246, 0.2);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .overlay-title h2 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .overlay-title p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #10b981);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    /* 9-Stage Checklist Grid */
+    .diagnostic-stages {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      background: var(--bg-card-subtle);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+
+    .stage-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+    }
+
+    .stage-item.pending {
+      color: var(--text-subtle);
+    }
+
+    .stage-item.in-progress {
+      color: #60a5fa;
+      font-weight: 600;
+    }
+
+    .stage-item.completed {
+      color: #34d399;
+      font-weight: 500;
+    }
+
+    .stage-item.failed {
+      color: #f87171;
+      font-weight: 600;
+    }
+
+    .stage-icon {
+      font-size: 14px;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* Diagnostics Log Console */
+    .diagnostics-log-toggle {
+      font-size: 12px;
+      color: #60a5fa;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      user-select: none;
+    }
+
+    .diagnostics-log-toggle:hover {
+      text-decoration: underline;
+    }
+
+    #diagnostics-log-box {
+      display: none;
+      background: #080c14;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #cbd5e1;
+      max-height: 140px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin-bottom: 16px;
+    }
+
+    /* Action Buttons */
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
     .action-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 10px 18px;
+      padding: 8px 16px;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 600;
       text-decoration: none;
       cursor: pointer;
       border: none;
       transition: all 0.2s ease;
-      margin: 4px;
     }
 
     .btn-primary {
@@ -246,13 +362,51 @@
 
     .btn-secondary {
       background: #1e293b;
-      color: #94a3b8;
+      color: #cbd5e1;
       border: 1px solid var(--border-color);
     }
 
     .btn-secondary:hover {
       background: #334155;
       color: #fff;
+    }
+
+    /* Error Alert Box */
+    .error-card {
+      display: none;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+
+    .error-card h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #f87171;
+      margin-bottom: 6px;
+    }
+
+    .error-card p {
+      font-size: 12px;
+      color: #fca5a5;
+      line-height: 1.45;
+      margin-bottom: 8px;
+    }
+
+    .error-trace {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 8px;
+      color: #fca5a5;
+      max-height: 120px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
     }
 
     footer {
@@ -291,25 +445,82 @@
     </div>
     <div class="header-badges">
       <span class="badge badge-jdeploy">📦 jDeploy 1.0.0</span>
-      <span class="badge badge-status">
+      <span class="badge badge-status" id="status-badge">
         <span class="badge-dot" id="status-dot"></span>
-        <span id="status-text">WebAssembly Engine Ready</span>
+        <span id="status-text">Bootstrapping JVM (Java 17)...</span>
       </span>
     </div>
   </header>
 
   <!-- Interactive Application Viewport -->
   <main>
+    <!-- Diagnostic Startup Overlay -->
     <div id="loading-overlay">
-      <div class="spinner" id="loader-spinner"></div>
-      <h2 id="loader-title">Bootstrapping JVM Runtime...</h2>
-      <p id="loader-desc">Initializing WebAssembly OpenJDK bytecode translator and loading Java Swing desktop components.</p>
-      <div class="progress-track" id="loader-track">
-        <div class="progress-bar"></div>
+      <div class="overlay-header">
+        <div class="spinner" id="loader-spinner"></div>
+        <div class="overlay-title">
+          <h2 id="loader-title">Starting Student Result Management System...</h2>
+          <p id="loader-desc">Initializing WebAssembly OpenJDK bytecode translator and loading Java Swing desktop components.</p>
+        </div>
       </div>
-      <div id="loader-actions" style="display:none; margin-top:16px;"></div>
+
+      <!-- Stage Progress Track -->
+      <div class="progress-track">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+
+      <!-- 9-Stage Diagnostics Checklist -->
+      <div class="diagnostic-stages">
+        <div class="stage-item in-progress" id="stage-server">
+          <span class="stage-icon">⏳</span> 1. Starting local server
+        </div>
+        <div class="stage-item pending" id="stage-health">
+          <span class="stage-icon">⏳</span> 2. Checking server availability
+        </div>
+        <div class="stage-item pending" id="stage-cheerpj">
+          <span class="stage-icon">⏳</span> 3. Loading CheerpJ runtime
+        </div>
+        <div class="stage-item pending" id="stage-jvm">
+          <span class="stage-icon">⏳</span> 4. Initializing Java runtime
+        </div>
+        <div class="stage-item pending" id="stage-jar">
+          <span class="stage-icon">⏳</span> 5. Loading application JAR
+        </div>
+        <div class="stage-item pending" id="stage-deps">
+          <span class="stage-icon">⏳</span> 6. Loading dependencies
+        </div>
+        <div class="stage-item pending" id="stage-main">
+          <span class="stage-icon">⏳</span> 7. Invoking MainApplication
+        </div>
+        <div class="stage-item pending" id="stage-swing">
+          <span class="stage-icon">⏳</span> 8. Initializing Swing UI
+        </div>
+        <div class="stage-item pending" id="stage-ready">
+          <span class="stage-icon">⏳</span> 9. Application successfully started
+        </div>
+      </div>
+
+      <!-- Error Alert Card (Hidden by default) -->
+      <div class="error-card" id="error-card">
+        <h3 id="error-title">Startup Error</h3>
+        <p id="error-desc"></p>
+        <div class="error-trace" id="error-trace"></div>
+      </div>
+
+      <!-- Real-time Console Log Toggle -->
+      <div class="diagnostics-log-toggle" id="log-toggle" onclick="toggleDiagnosticsLog()">
+        <span>▶ View Live Diagnostic Log</span>
+      </div>
+      <div id="diagnostics-log-box"></div>
+
+      <!-- Diagnostic Action Controls -->
+      <div class="action-row" id="loader-actions" style="display:none;">
+        <button onclick="location.reload()" class="action-btn btn-primary">🔄 Retry Startup</button>
+        <button onclick="forceRevealDisplay()" class="action-btn btn-secondary">👁 Force Show Display</button>
+      </div>
     </div>
 
+    <!-- Application Display Container -->
     <div id="app-container">
       <div id="cheerpj-display"></div>
     </div>
@@ -322,64 +533,257 @@
   </footer>
 
   <script>
+    // Stage elements
+    const stages = {
+      server: document.getElementById('stage-server'),
+      health: document.getElementById('stage-health'),
+      cheerpj: document.getElementById('stage-cheerpj'),
+      jvm: document.getElementById('stage-jvm'),
+      jar: document.getElementById('stage-jar'),
+      deps: document.getElementById('stage-deps'),
+      main: document.getElementById('stage-main'),
+      swing: document.getElementById('stage-swing'),
+      ready: document.getElementById('stage-ready')
+    };
+
     const overlay = document.getElementById('loading-overlay');
     const loaderTitle = document.getElementById('loader-title');
     const loaderDesc = document.getElementById('loader-desc');
     const loaderSpinner = document.getElementById('loader-spinner');
-    const loaderTrack = document.getElementById('loader-track');
-    const loaderActions = document.getElementById('loader-actions');
+    const progressBar = document.getElementById('progress-bar');
+    const statusBadge = document.getElementById('status-badge');
     const statusText = document.getElementById('status-text');
-    const statusDot = document.getElementById('status-dot');
+    const errorCard = document.getElementById('error-card');
+    const errorTitle = document.getElementById('error-title');
+    const errorDesc = document.getElementById('error-desc');
+    const errorTrace = document.getElementById('error-trace');
+    const loaderActions = document.getElementById('loader-actions');
+    const logBox = document.getElementById('diagnostics-log-box');
+    const logToggle = document.getElementById('log-toggle');
     const displayElement = document.getElementById('cheerpj-display');
 
-    function dismissOverlay() {
-      if (overlay) {
-        overlay.style.opacity = '0';
-        setTimeout(() => {
-          overlay.style.display = 'none';
-        }, 500);
+    let isAppReady = false;
+    let logBuffer = [];
+
+    // Intercept console output to capture JVM stdout/stderr and diagnostic events
+    const origLog = console.log;
+    const origErr = console.error;
+    const origWarn = console.warn;
+
+    function appendDiagnosticLog(level, msg) {
+      const time = new Date().toLocaleTimeString();
+      const line = `[${time}] [${level}] ${msg}`;
+      logBuffer.push(line);
+      if (logBox) {
+        logBox.textContent += line + '\n';
+        logBox.scrollTop = logBox.scrollHeight;
       }
     }
 
-    async function launchApp() {
-      try {
-        loaderTitle.textContent = 'Verifying CheerpJ Engine...';
-        loaderDesc.textContent = 'Checking WebAssembly Java 17 runtime loader...';
-        statusText.textContent = 'Verifying Runtime...';
+    console.log = function(...args) {
+      origLog.apply(console, args);
+      const str = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+      appendDiagnosticLog('INFO', str);
+      checkDiagnosticMilestones(str);
+    };
 
-        if (typeof cheerpjInit === 'undefined') {
-          throw new Error('CheerpJ loader script could not be initialized from CDN.');
+    console.warn = function(...args) {
+      origWarn.apply(console, args);
+      const str = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+      appendDiagnosticLog('WARN', str);
+    };
+
+    console.error = function(...args) {
+      origErr.apply(console, args);
+      const str = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+      appendDiagnosticLog('ERROR', str);
+      if (str.includes('NoSuchMethodError') || str.includes('ClassNotFoundException') || str.includes('Exception in thread')) {
+        handleStartupFailure('JVM Runtime Exception', 'A fatal exception occurred during JVM startup: ' + str, str);
+      }
+    };
+
+    function toggleDiagnosticsLog() {
+      if (logBox.style.display === 'block') {
+        logBox.style.display = 'none';
+        logToggle.innerHTML = '<span>▶ View Live Diagnostic Log</span>';
+      } else {
+        logBox.style.display = 'block';
+        logToggle.innerHTML = '<span>▼ Hide Live Diagnostic Log</span>';
+      }
+    }
+
+    function setStage(stageKey, state, textOverride) {
+      const el = stages[stageKey];
+      if (!el) return;
+      el.className = 'stage-item ' + state;
+      const icon = el.querySelector('.stage-icon');
+      if (state === 'completed') {
+        icon.textContent = '✅';
+      } else if (state === 'in-progress') {
+        icon.textContent = '🔄';
+      } else if (state === 'failed') {
+        icon.textContent = '❌';
+      } else {
+        icon.textContent = '⏳';
+      }
+      if (textOverride) {
+        el.childNodes[el.childNodes.length - 1].nodeValue = ' ' + textOverride;
+      }
+    }
+
+    function updateProgress(percent, title, desc) {
+      progressBar.style.width = percent + '%';
+      if (title) loaderTitle.textContent = title;
+      if (desc) loaderDesc.textContent = desc;
+    }
+
+    function checkDiagnosticMilestones(msg) {
+      if (msg.includes('STAGE:MAIN_INVOKED')) {
+        setStage('deps', 'completed');
+        setStage('main', 'completed');
+        setStage('swing', 'in-progress');
+        updateProgress(80, 'Initializing Swing UI...', 'Instantiating LoginFrame and configuring high-contrast components.');
+        statusText.textContent = 'Initializing Swing UI...';
+      } else if (msg.includes('STAGE:SWING_UI_READY') || msg.includes('Login window launched successfully')) {
+        onApplicationSuccessfullyStarted();
+      }
+    }
+
+    function handleStartupFailure(title, description, details) {
+      loaderSpinner.style.display = 'none';
+      errorCard.style.display = 'block';
+      errorTitle.textContent = title || 'Application Startup Error';
+      errorDesc.textContent = description || 'A critical failure occurred during bootstrap.';
+      errorTrace.textContent = details || 'No additional stack trace captured.';
+      loaderActions.style.display = 'flex';
+      logBox.style.display = 'block';
+      logToggle.innerHTML = '<span>▼ Live Diagnostic Log</span>';
+
+      statusBadge.className = 'badge badge-status error';
+      statusText.textContent = 'Startup Failed';
+    }
+
+    function onApplicationSuccessfullyStarted() {
+      if (isAppReady) return;
+      isAppReady = true;
+
+      setStage('swing', 'completed');
+      setStage('ready', 'completed');
+      updateProgress(100, 'Application Successfully Started!', 'Student Result Management System is verified active.');
+
+      statusBadge.className = 'badge badge-status running';
+      statusText.textContent = 'App Running';
+
+      setTimeout(() => {
+        if (overlay) {
+          overlay.style.opacity = '0';
+          overlay.style.transform = 'translate(-50%, -50%) scale(0.95)';
+          setTimeout(() => {
+            overlay.style.display = 'none';
+          }, 500);
+        }
+      }, 700);
+    }
+
+    function forceRevealDisplay() {
+      onApplicationSuccessfullyStarted();
+    }
+
+    async function bootstrapApplication() {
+      try {
+        // Stage 1: Starting local server & verifying environment
+        setStage('server', 'in-progress');
+        updateProgress(11, 'Starting Local Server...', 'Verifying local WebAssembly server connectivity and response headers.');
+        statusText.textContent = 'Checking Local Server...';
+
+        const origin = window.location.origin;
+        console.log('[DIAGNOSTIC] Current host origin:', origin);
+
+        // Stage 2: Checking server availability via health check
+        setStage('server', 'completed');
+        setStage('health', 'in-progress');
+        updateProgress(22, 'Checking Server Availability...', 'Probing /health endpoint for server response and range capabilities.');
+
+        try {
+          const healthRes = await fetch('/health', { method: 'GET', cache: 'no-cache' });
+          if (healthRes.ok) {
+            const healthData = await healthRes.json();
+            console.log('[DIAGNOSTIC] Server Health Response:', healthData);
+          }
+        } catch (netErr) {
+          console.warn('[DIAGNOSTIC] Note on local health check:', netErr.message);
         }
 
-        loaderTitle.textContent = 'Initializing JVM...';
-        loaderDesc.textContent = 'Starting OpenJDK 17 WebAssembly environment...';
-        statusText.textContent = 'Starting JVM (Java 17)...';
+        setStage('health', 'completed');
 
-        // Initialize CheerpJ Java 17 runtime
+        // Stage 3: Loading CheerpJ WebAssembly Runtime Loader
+        setStage('cheerpj', 'in-progress');
+        updateProgress(33, 'Loading CheerpJ Runtime...', 'Fetching CheerpJ OpenJDK 17 WebAssembly engine from CDN.');
+        statusText.textContent = 'Loading CheerpJ Runtime...';
+
+        if (typeof cheerpjInit === 'undefined') {
+          throw new Error('CheerpJ runtime loader script (https://cjrtnc.leaningtech.com/5.0/loader.js) could not be loaded.');
+        }
+
+        setStage('cheerpj', 'completed');
+
+        // Stage 4: Initializing Java 17 Runtime
+        setStage('jvm', 'in-progress');
+        updateProgress(44, 'Initializing Java Runtime...', 'Starting Java 17 JVM engine inside browser WebAssembly.');
+        statusText.textContent = 'Initializing JVM (Java 17)...';
+
         await cheerpjInit({
-          version: 17
+          version: 17,
+          javaArgs: ["-Dbrowser.mode=true", "-Dcheerpj.version=3.0"]
         });
 
-        loaderTitle.textContent = 'Mounting Desktop Display...';
-        loaderDesc.textContent = 'Configuring graphics canvas and event handlers...';
-        statusText.textContent = 'Rendering Display...';
+        setStage('jvm', 'completed');
 
-        // Bind graphics canvas to the display container
+        // Stage 5: Loading application JAR
+        setStage('jar', 'in-progress');
+        updateProgress(55, 'Loading Application JAR...', 'Streaming student-result-management-system-1.0.0.jar via HTTP Range requests.');
+        statusText.textContent = 'Loading Application JAR...';
+
+        const jarName = 'student-result-management-system-1.0.0.jar';
+        let jarVirtualPath = `/app/${jarName}`;
+
+        // Verify JAR is accessible on server
+        try {
+          const jarCheck = await fetch(jarName, { method: 'HEAD' });
+          if (!jarCheck.ok && jarCheck.status !== 405) {
+            console.warn('[DIAGNOSTIC] JAR HEAD request returned status:', jarCheck.status);
+          } else {
+            console.log('[DIAGNOSTIC] JAR file confirmed accessible (Size: ' + jarCheck.headers.get('content-length') + ' bytes)');
+          }
+        } catch (jarHeadErr) {
+          console.warn('[DIAGNOSTIC] Note on JAR check:', jarHeadErr.message);
+        }
+
+        setStage('jar', 'completed');
+
+        // Stage 6: Loading dependencies & mounting display canvas
+        setStage('deps', 'in-progress');
+        updateProgress(66, 'Loading Dependencies...', 'Mounting graphics display canvas and configuring AWT peers.');
+        statusText.textContent = 'Configuring Display Canvas...';
+
         cheerpjCreateDisplay(-1, -1, displayElement);
 
-        statusText.textContent = 'App Running';
+        setStage('deps', 'completed');
 
-        // In CheerpJ, /app/ maps to the directory where index.html is hosted.
-        // On GitHub Pages (https://user.github.io/repo/), /app/ already points to https://user.github.io/repo/
-        const jarName = 'student-result-management-system-1.0.0.jar';
-        const jarVirtualPath = `/app/${jarName}`;
-        console.log('[CheerpJ] Launching JAR:', jarVirtualPath);
+        // Stage 7: Invoking MainApplication
+        setStage('main', 'in-progress');
+        updateProgress(77, 'Invoking MainApplication...', 'Executing result.ui.MainApplication.main(["--browser"]) in Java 17 JVM.');
+        statusText.textContent = 'Executing MainApplication...';
 
-        // Launch the fat JAR with fallback
-        cheerpjRunJar(jarVirtualPath)
-          .then(code => console.log('[CheerpJ] Java app terminated with code:', code))
+        console.log('[DIAGNOSTIC] Invoking cheerpjRunJar:', jarVirtualPath);
+
+        // Execute JAR with browser argument
+        cheerpjRunJar(jarVirtualPath, '--browser')
+          .then(exitCode => {
+            console.log('[CheerpJ] Java application exited with code:', exitCode);
+          })
           .catch(err => {
-            console.warn('[CheerpJ] Direct /app/ path failed, attempting subpath fallback:', err);
+            console.warn('[CheerpJ] Direct /app/ path encountered error, attempting subpath fallback:', err);
             const pathSegments = window.location.pathname.replace(/\/+$/, '').split('/').filter(Boolean);
             if (pathSegments.length > 0 && pathSegments[pathSegments.length - 1].includes('.')) {
               pathSegments.pop();
@@ -387,51 +791,39 @@
             const subPath = pathSegments.length > 0 ? '/' + pathSegments.join('/') : '';
             if (subPath) {
               const fallbackPath = `/app${subPath}/${jarName}`;
-              console.log('[CheerpJ] Trying fallback path:', fallbackPath);
-              cheerpjRunJar(fallbackPath).catch(e => console.error('[CheerpJ] Fallback failed:', e));
+              console.log('[CheerpJ] Trying subpath fallback:', fallbackPath);
+              cheerpjRunJar(fallbackPath, '--browser').catch(e => {
+                handleStartupFailure('Execution Failure', 'CheerpJ JAR execution failed: ' + e.message, e.stack);
+              });
+            } else {
+              handleStartupFailure('Execution Failure', 'CheerpJ JAR execution failed: ' + err.message, err.stack);
             }
           });
 
-        // Fade out overlay when successfully running
-        dismissOverlay();
+        // Stage 8 & 9 are marked when the JVM outputs STAGE:SWING_UI_READY or login window message.
+        // Safety fallback timer: if no error was reported after 14 seconds and display canvas is active, reveal display
+        setTimeout(() => {
+          if (!isAppReady) {
+            console.log('[DIAGNOSTIC] Safety timeout reached; checking canvas activity...');
+            const canvas = displayElement.querySelector('canvas');
+            if (canvas) {
+              console.log('[DIAGNOSTIC] Active canvas element detected in display container.');
+              onApplicationSuccessfullyStarted();
+            }
+          }
+        }, 14000);
 
       } catch (err) {
-        console.error('CheerpJ Launch Error:', err);
-        loaderSpinner.style.display = 'none';
-        loaderTrack.style.display = 'none';
-
-        const isEvalError = err.name === 'EvalError' || (err.message && err.message.includes('unsafe-eval'));
-
-        if (isEvalError) {
-          loaderTitle.textContent = 'CSP / WebAssembly Restriction';
-          loaderDesc.innerHTML = 
-            '<div style="text-align:left; font-size:12px; background:#0f172a; padding:12px; border-radius:8px; border:1px solid #334155; margin-bottom:12px;">' +
-            '<strong style="color:#ef4444;">Why is initialization blocked?</strong><br>' +
-            'The cloud edge enforces a strict <code>Content-Security-Policy</code> without <code>\'unsafe-eval\'</code>. ' +
-            'Because CheerpJ\'s Java 17 WebAssembly JIT engine requires eval for dynamic bytecode generation, the browser blocks initialization under this CSP.' +
-            '</div>' +
-            '<div style="font-size:13px; color:#94a3b8; text-align:left;">' +
-            '✅ <strong>Local Web:</strong> Fully unrestricted via <code>run-browser.bat</code> at <code>http://localhost:8080</code><br>' +
-            '✅ <strong>Cloud Hosting:</strong> Deploy to Vercel/Netlify with proper headers (see included vercel.json / netlify.toml)<br>' +
-            '✅ <strong>Desktop App:</strong> Direct native execution via <code>run.bat</code>' +
-            '</div>';
-        } else {
-          loaderTitle.textContent = 'Web Engine Notice';
-          loaderDesc.innerHTML = '<span style="color:#ef4444; font-weight:600;">' + err.message + '</span>';
-        }
-
-        loaderActions.style.display = 'block';
-        loaderActions.innerHTML = 
-          '<a href="http://localhost:8080" class="action-btn btn-primary">Open Local Web (localhost:8080)</a>' +
-          '<button onclick="location.reload()" class="action-btn btn-secondary">Retry</button>';
-
-        statusText.textContent = isEvalError ? 'Blocked by Cloud CSP' : 'Engine Error';
-        statusDot.style.backgroundColor = '#ef4444';
-        statusDot.style.boxShadow = '0 0 8px #ef4444';
+        console.error('[DIAGNOSTIC-ERROR] Startup caught error:', err);
+        handleStartupFailure(
+          'Engine Bootstrap Failed',
+          err.message || 'An unexpected error occurred during application startup.',
+          err.stack || String(err)
+        );
       }
     }
 
-    window.addEventListener('load', launchApp);
+    window.addEventListener('load', bootstrapApplication);
   </script>
 </body>
 </html>

@@ -73,8 +73,8 @@ public class LoginFrame extends JFrame {
     private void initComponents() {
         setTitle(UIConstants.APP_TITLE + " - Login");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1280, 760);
-        setMinimumSize(new Dimension(960, 600));
+        setSize(1024, 680);
+        setMinimumSize(new Dimension(800, 560));
         setResizable(true);
 
         try {
@@ -82,9 +82,12 @@ public class LoginFrame extends JFrame {
         } catch (Throwable ignored) {
         }
 
-        try {
-            setExtendedState(JFrame.MAXIMIZED_BOTH);
-        } catch (Throwable ignored) {
+        // In CheerpJ WebAssembly, keep natural window bounds inside canvas; maximize on native desktop
+        if (!MainApplication.isBrowserEnvironment()) {
+            try {
+                setExtendedState(JFrame.MAXIMIZED_BOTH);
+            } catch (Throwable ignored) {
+            }
         }
 
         // Root full-screen background container
@@ -137,7 +140,7 @@ public class LoginFrame extends JFrame {
 
         // 1. Headline: "Hey, Student !  🎓" in high-contrast dark charcoal
         JLabel titleLabel = new JLabel("Hey, Student !  \uD83C\uDF93", SwingConstants.LEFT);
-        titleLabel.setFont(new Font("Segoe UI Emoji", Font.BOLD, 28));
+        titleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 26));
         titleLabel.setForeground(new Color(15, 23, 42)); // #0F172A
         gbc.gridy = 0;
         gbc.insets = new Insets(0, 0, 4, 0);
