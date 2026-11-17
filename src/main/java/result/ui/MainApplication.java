@@ -27,11 +27,29 @@ public class MainApplication {
         // Schedule GUI startup on the Event Dispatch Thread (EDT)
         SwingUtilities.invokeLater(() -> {
             try {
-                // Apply the native operating system look and feel for a modern desktop look
+                // Apply cross-platform Look and Feel in WebAssembly (CheerpJ) to prevent
+                // NoSuchMethodError from missing native Linux GTK libraries.
                 try {
-                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                    boolean isBrowserEnv = System.getProperty("cheerpj.version") != null
+                            || System.getProperty("os.name", "").toLowerCase().contains("linux");
+                    if (isBrowserEnv) {
+                        try {
+                            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+                        } catch (Throwable t) {
+                            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+                        }
+                    } else {
+                        try {
+                            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                        } catch (Throwable t) {
+                            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+                        }
+                    }
                 } catch (Throwable ignored) {
-                    // Fall back to standard CrossPlatform look and feel
+                    try {
+                        UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+                    } catch (Throwable t2) {
+                    }
                 }
 
                 LoginFrame loginFrame = new LoginFrame();
@@ -47,10 +65,13 @@ public class MainApplication {
                 System.err.println("[FATAL] Failed to launch application: " + t.getMessage());
                 t.printStackTrace();
 
-                String details = t.getClass().getSimpleName() + ": " + (t.getMessage() != null ? t.getMessage() : "Internal Error");
+                java.io.StringWriter sw = new java.io.StringWriter();
+                t.printStackTrace(new java.io.PrintWriter(sw));
+                String fullTrace = sw.toString();
+
                 JOptionPane.showMessageDialog(
                         null,
-                        "Failed to launch application:\n" + details,
+                        "Failed to launch application:\n" + fullTrace,
                         "Application Startup Error",
                         JOptionPane.ERROR_MESSAGE
                 );
