@@ -122,6 +122,15 @@ public class DatabaseInitializer {
                             insertAdmin.executeUpdate();
                             System.out.println("[INFO] Default administrator account ('admin' / 'admin123') initialized successfully.");
                         }
+
+                        try (PreparedStatement insertRoot = conn.prepareStatement(
+                                "INSERT INTO users (username, password, full_name, role) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE password = VALUES(password)")) {
+                            insertRoot.setString(1, "root");
+                            insertRoot.setString(2, "Mohit@2026");
+                            insertRoot.setString(3, "Database Administrator");
+                            insertRoot.setString(4, "ADMIN");
+                            insertRoot.executeUpdate();
+                        }
                     }
                 }
             }

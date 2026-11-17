@@ -47,7 +47,7 @@ public class ResultDAOImpl implements ResultDAO {
             }
             // In MySQL, ON DUPLICATE KEY UPDATE with unchanged values returns 0 (success)
             return affected >= 0;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to insert student result.", e);
         }
     }
@@ -73,7 +73,7 @@ public class ResultDAOImpl implements ResultDAO {
                 return true;
             }
             return findByStudentAndSubject(result.getStudentId(), result.getSubjectId()).isPresent();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to update result for student ID: " + result.getStudentId(), e);
         }
     }
@@ -86,7 +86,7 @@ public class ResultDAOImpl implements ResultDAO {
 
             stmt.setInt(1, resultId);
             return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to delete result with ID: " + resultId, e);
         }
     }
@@ -99,7 +99,7 @@ public class ResultDAOImpl implements ResultDAO {
 
             stmt.setInt(1, studentId);
             return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to delete results for student ID: " + studentId, e);
         }
     }
@@ -119,7 +119,7 @@ public class ResultDAOImpl implements ResultDAO {
                     return Optional.of(mapResultSetToResultWithSubject(rs));
                 }
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to query result by ID: " + resultId, e);
         }
         return Optional.empty();
@@ -142,7 +142,7 @@ public class ResultDAOImpl implements ResultDAO {
                     return Optional.of(mapResultSetToResultWithSubject(rs));
                 }
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to query result by student and subject.", e);
         }
         return Optional.empty();
@@ -165,7 +165,7 @@ public class ResultDAOImpl implements ResultDAO {
                     results.add(mapResultSetToResultWithSubject(rs));
                 }
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to query results for student ID: " + studentId, e);
         }
         return results;
@@ -186,7 +186,7 @@ public class ResultDAOImpl implements ResultDAO {
             while (rs.next()) {
                 results.add(mapResultSetToResultWithSubject(rs));
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to fetch all results.", e);
         }
         return results;

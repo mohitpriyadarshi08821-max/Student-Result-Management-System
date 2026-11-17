@@ -17,7 +17,7 @@ public class DatabaseConnection {
     private static DatabaseConnection instance;
     private static final String DEFAULT_URL = "jdbc:mysql://localhost:3306/student_result_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&connectTimeout=2000&socketTimeout=5000";
     private static final String DEFAULT_USER = "root";
-    private static final String DEFAULT_PASSWORD = "";
+    private static final String DEFAULT_PASSWORD = "Mohit@2026";
 
     private String url;
     private String user;

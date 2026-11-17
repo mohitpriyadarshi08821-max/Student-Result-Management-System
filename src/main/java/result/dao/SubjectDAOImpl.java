@@ -44,7 +44,7 @@ public class SubjectDAOImpl implements SubjectDAO {
                 return true;
             }
             return false;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to insert subject: " + subject.getSubjectCode(), e);
         }
     }
@@ -71,7 +71,7 @@ public class SubjectDAOImpl implements SubjectDAO {
                 return true;
             }
             return findById(subject.getSubjectId()).isPresent();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to update subject: " + subject.getSubjectCode(), e);
         }
     }
@@ -84,7 +84,7 @@ public class SubjectDAOImpl implements SubjectDAO {
 
             stmt.setInt(1, subjectId);
             return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to delete subject with ID: " + subjectId, e);
         }
     }
@@ -101,7 +101,7 @@ public class SubjectDAOImpl implements SubjectDAO {
                     return Optional.of(mapResultSetToSubject(rs));
                 }
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to query subject by ID: " + subjectId, e);
         }
         return Optional.empty();
@@ -123,7 +123,7 @@ public class SubjectDAOImpl implements SubjectDAO {
                     return Optional.of(mapResultSetToSubject(rs));
                 }
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to query subject by code: " + subjectCode, e);
         }
         return Optional.empty();
@@ -140,7 +140,7 @@ public class SubjectDAOImpl implements SubjectDAO {
             while (rs.next()) {
                 subjects.add(mapResultSetToSubject(rs));
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to fetch all subjects.", e);
         }
         return subjects;

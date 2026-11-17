@@ -55,7 +55,7 @@ public class StudentDAOImpl implements StudentDAO {
                 return true;
             }
             return false;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to insert student record: " + student.getRollNumber(), e);
         }
     }
@@ -91,7 +91,7 @@ public class StudentDAOImpl implements StudentDAO {
                 return true;
             }
             return findById(student.getStudentId()).isPresent();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to update student record for: " + student.getRollNumber(), e);
         }
     }
@@ -105,7 +105,7 @@ public class StudentDAOImpl implements StudentDAO {
 
             stmt.setInt(1, studentId);
             return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to delete student with ID: " + studentId, e);
         }
     }
@@ -124,7 +124,7 @@ public class StudentDAOImpl implements StudentDAO {
                     return Optional.of(mapResultSetToStudent(rs));
                 }
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to query student by ID: " + studentId, e);
         }
         return Optional.empty();
@@ -148,7 +148,7 @@ public class StudentDAOImpl implements StudentDAO {
                     return Optional.of(mapResultSetToStudent(rs));
                 }
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to query student by Roll Number: " + rollNumber, e);
         }
         return Optional.empty();
@@ -167,7 +167,7 @@ public class StudentDAOImpl implements StudentDAO {
             while (rs.next()) {
                 students.add(mapResultSetToStudent(rs));
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to fetch all students.", e);
         }
         return students;
@@ -199,7 +199,7 @@ public class StudentDAOImpl implements StudentDAO {
                     students.add(mapResultSetToStudent(rs));
                 }
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new DatabaseException("Failed to search students with keyword: " + keyword, e);
         }
         return students;
