@@ -3,7 +3,7 @@ package result.ui;
 import result.dao.UserDAO;
 import result.exception.ValidationException;
 import result.model.User;
-import result.service.AuthService;
+import result.service.AuthService; 
 
 import java.awt.GraphicsEnvironment;
 import java.util.Optional;
@@ -106,6 +106,9 @@ public class LoginFrameTest {
         }
         if (frame.getAuthService() != authService) {
             throw new AssertionError("AuthService was not properly wired");
+        }
+        if (!frame.isResizable()) {
+            throw new AssertionError("LoginFrame should be resizable to allow maximize button to function");
         }
     }
 }

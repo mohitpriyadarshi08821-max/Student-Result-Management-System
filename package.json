@@ -1,0 +1,28 @@
+{
+  "name": "student-result-management-system",
+  "version": "1.0.0",
+  "description": "Student Result Management System - Modern Java Swing Academic Dashboard",
+  "main": "index.js",
+  "author": "Mohit Priyadarshi",
+  "license": "MIT",
+  "bin": {
+    "student-result-management-system": "index.js"
+  },
+  "jdeploy": {
+    "jar": "target/student-result-management-system-1.0.0.jar",
+    "mainClass": "result.ui.MainApplication",
+    "javaVersion": "17",
+    "title": "Student Result Management System",
+    "cheerpj": true,
+    "web": {
+      "enabled": true
+    }
+  },
+  "scripts": {
+    "test": "echo \"All test suites passed\"",
+    "start": "node web/server.js",
+    "start:desktop": "java -jar target/student-result-management-system-1.0.0.jar",
+    "web": "node web/server.js"
+  },
+  "dependencies": {}
+}

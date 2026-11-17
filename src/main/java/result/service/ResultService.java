@@ -82,6 +82,8 @@ public class ResultService {
 
         double totalObtained = 0.0;
         double totalMax = 0.0;
+        int totalCredits = 0;
+        double totalCreditPoints = 0.0;
         boolean hasFailedSubject = false;
 
         for (Result r : results) {
@@ -93,9 +95,14 @@ public class ResultService {
 
             double max = sub != null ? sub.getMaxMarks() : 100;
             int pass = sub != null ? sub.getPassMarks() : 35;
+            int credits = sub != null ? sub.getCredits() : 4;
 
             totalObtained += r.getMarksObtained();
             totalMax += max;
+            totalCredits += credits;
+
+            double gradePoint = calculateGradePoint(r.getMarksObtained(), max);
+            totalCreditPoints += (credits * gradePoint);
 
             if (r.getMarksObtained() < pass) {
                 hasFailedSubject = true;
@@ -105,13 +112,46 @@ public class ResultService {
         StudentResultSummary summary = new StudentResultSummary(student, results);
         summary.setTotalMarksObtained(totalObtained);
         summary.setTotalMaxMarks(totalMax);
+        summary.setTotalCredits(totalCredits);
+        summary.setTotalCreditPoints(totalCreditPoints);
 
         double percentage = totalMax > 0 ? (totalObtained / totalMax) * 100.0 : 0.0;
         summary.setPercentage(Math.round(percentage * 100.0) / 100.0);
         summary.setOverallGrade(calculateOverallGrade(summary.getPercentage()));
-        summary.setStatus(hasFailedSubject || percentage < 35.0 ? "FAIL" : "PASS");
+        boolean isPass = !hasFailedSubject && percentage >= 35.0;
+        summary.setStatus(isPass ? "PASS" : "FAIL");
+
+        double sgpa = totalCredits > 0 ? (totalCreditPoints / totalCredits) : 0.0;
+        summary.setSgpa(Math.round(sgpa * 100.0) / 100.0);
+
+        if (isPass) {
+            if (summary.getSgpa() >= 8.5) {
+                summary.setDivision("First Class with Distinction");
+            } else if (summary.getSgpa() >= 6.5) {
+                summary.setDivision("First Class");
+            } else if (summary.getSgpa() >= 5.0) {
+                summary.setDivision("Second Class");
+            } else {
+                summary.setDivision("Pass Class");
+            }
+        } else {
+            summary.setDivision("Fail / Reappear");
+        }
 
         return summary;
+    }
+
+    public double calculateGradePoint(double marks, double maxMarks) {
+        if (maxMarks <= 0) return 0.0;
+        double pct = (marks / maxMarks) * 100.0;
+        if (pct >= 90.0) return 10.0;
+        if (pct >= 80.0) return 9.0;
+        if (pct >= 70.0) return 8.0;
+        if (pct >= 60.0) return 7.0;
+        if (pct >= 55.0) return 6.0;
+        if (pct >= 45.0) return 5.0;
+        if (pct >= 40.0) return 4.0;
+        return 0.0;
     }
 
     public String calculateGrade(double marks, double maxMarks) {

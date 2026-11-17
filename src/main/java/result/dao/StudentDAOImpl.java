@@ -115,7 +115,7 @@ public class StudentDAOImpl implements StudentDAO {
         String sql = "SELECT student_id, roll_number, first_name, last_name, email, course, semester, gender, dob " +
                 "FROM students WHERE student_id = ?";
 
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+        try (Connection conn = DatabaseConnection.getInstance( ).getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, studentId);

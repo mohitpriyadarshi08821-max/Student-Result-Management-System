@@ -16,6 +16,10 @@ public class StudentResultSummary {
     private double percentage;
     private String overallGrade;
     private String status; // "PASS" or "FAIL"
+    private int totalCredits;
+    private double totalCreditPoints;
+    private double sgpa;
+    private String division = "N/A";
 
     public StudentResultSummary() {
     }
@@ -79,6 +83,38 @@ public class StudentResultSummary {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public int getTotalCredits() {
+        return totalCredits;
+    }
+
+    public void setTotalCredits(int totalCredits) {
+        this.totalCredits = totalCredits;
+    }
+
+    public double getTotalCreditPoints() {
+        return totalCreditPoints;
+    }
+
+    public void setTotalCreditPoints(double totalCreditPoints) {
+        this.totalCreditPoints = totalCreditPoints;
+    }
+
+    public double getSgpa() {
+        return sgpa;
+    }
+
+    public void setSgpa(double sgpa) {
+        this.sgpa = sgpa;
+    }
+
+    public String getDivision() {
+        return division;
+    }
+
+    public void setDivision(String division) {
+        this.division = division;
     }
 }
 

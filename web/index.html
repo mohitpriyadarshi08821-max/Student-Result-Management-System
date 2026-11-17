@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Result Management System - Academic Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- CheerpJ WebAssembly Java 17 Runtime Loader -->
+  <script src="https://cjrtnc.leaningtech.com/5.0/loader.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0b0f19;
+      --bg-card: #151e32;
+      --border-color: #263352;
+      --accent-blue: #3b82f6;
+      --accent-emerald: #10b981;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .header-branding {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .app-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+    }
+
+    .title-group h1 {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .title-group p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .header-badges {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-jdeploy {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .badge-status {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #34d399;
+      box-shadow: 0 0 8px #34d399;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      position: relative;
+      background: radial-gradient(circle at 50% 20%, rgba(37, 99, 235, 0.08) 0%, transparent 60%);
+      overflow: hidden;
+    }
+
+    #loading-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 36px 44px;
+      border-radius: 16px;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
+      text-align: center;
+      max-width: 520px;
+      width: 90%;
+      z-index: 100;
+      transition: opacity 0.5s ease;
+    }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 4px solid rgba(59, 130, 246, 0.2);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #loading-overlay h2 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    #loading-overlay p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar {
+      width: 35%;
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #10b981);
+      border-radius: 999px;
+      animation: progressIndeterminate 1.6s ease-in-out infinite;
+    }
+
+    @keyframes progressIndeterminate {
+      0% { transform: translateX(-100%); width: 30%; }
+      50% { width: 60%; }
+      100% { transform: translateX(350%); width: 30%; }
+    }
+
+    #app-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+
+    #cheerpj-display {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      margin: 4px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: #334155;
+      color: #fff;
+    }
+
+    footer {
+      background: #090d16;
+      border-top: 1px solid var(--border-color);
+      padding: 8px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    footer a {
+      color: #60a5fa;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header>
+    <div class="header-branding">
+      <div class="app-icon">🎓</div>
+      <div class="title-group">
+        <h1>Student Result Management System</h1>
+        <p>Java Swing Desktop Application running in Browser via CheerpJ & jDeploy</p>
+      </div>
+    </div>
+    <div class="header-badges">
+      <span class="badge badge-jdeploy">📦 jDeploy 1.0.0</span>
+      <span class="badge badge-status">
+        <span class="badge-dot" id="status-dot"></span>
+        <span id="status-text">WebAssembly Engine Ready</span>
+      </span>
+    </div>
+  </header>
+
+  <!-- Interactive Application Viewport -->
+  <main>
+    <div id="loading-overlay">
+      <div class="spinner" id="loader-spinner"></div>
+      <h2 id="loader-title">Bootstrapping JVM Runtime...</h2>
+      <p id="loader-desc">Initializing WebAssembly OpenJDK bytecode translator and loading Java Swing desktop components.</p>
+      <div class="progress-track" id="loader-track">
+        <div class="progress-bar"></div>
+      </div>
+      <div id="loader-actions" style="display:none; margin-top:16px;"></div>
+    </div>
+
+    <div id="app-container">
+      <div id="cheerpj-display"></div>
+    </div>
+  </main>
+
+  <!-- Status Footer -->
+  <footer>
+    <span>💡 Tip: Log in using username <strong>admin</strong> and password <strong>admin123</strong> to test the dashboard.</span>
+    <span>Powered by <a href="https://www.jdeploy.com" target="_blank" rel="noopener">jDeploy</a> & <a href="https://cheerpj.com" target="_blank" rel="noopener">CheerpJ WebAssembly</a></span>
+  </footer>
+
+  <script>
+    const overlay = document.getElementById('loading-overlay');
+    const loaderTitle = document.getElementById('loader-title');
+    const loaderDesc = document.getElementById('loader-desc');
+    const loaderSpinner = document.getElementById('loader-spinner');
+    const loaderTrack = document.getElementById('loader-track');
+    const loaderActions = document.getElementById('loader-actions');
+    const statusText = document.getElementById('status-text');
+    const statusDot = document.getElementById('status-dot');
+    const displayElement = document.getElementById('cheerpj-display');
+
+    function dismissOverlay() {
+      if (overlay) {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+          overlay.style.display = 'none';
+        }, 500);
+      }
+    }
+
+    async function launchApp() {
+      try {
+        loaderTitle.textContent = 'Verifying CheerpJ Engine...';
+        loaderDesc.textContent = 'Checking WebAssembly Java 17 runtime loader...';
+        statusText.textContent = 'Verifying Runtime...';
+
+        if (typeof cheerpjInit === 'undefined') {
+          throw new Error('CheerpJ loader script could not be initialized from CDN.');
+        }
+
+        loaderTitle.textContent = 'Initializing JVM...';
+        loaderDesc.textContent = 'Starting OpenJDK 17 WebAssembly environment...';
+        statusText.textContent = 'Starting JVM (Java 17)...';
+
+        // Initialize CheerpJ Java 17 runtime
+        await cheerpjInit({
+          version: 17,
+          status: 'splash'
+        });
+
+        loaderTitle.textContent = 'Mounting Desktop Display...';
+        loaderDesc.textContent = 'Configuring graphics canvas and event handlers...';
+        statusText.textContent = 'Rendering Display...';
+
+        // Bind graphics canvas to the display container
+        cheerpjCreateDisplay(-1, -1, displayElement);
+
+        statusText.textContent = 'App Running';
+
+        // Dynamic virtual path: supports root domains, localhost, and GitHub Pages repository subpaths
+        const pathSegments = window.location.pathname.replace(/\/+$/, '').split('/').filter(Boolean);
+        if (pathSegments.length > 0 && pathSegments[pathSegments.length - 1].includes('.')) {
+          pathSegments.pop();
+        }
+        const subPath = pathSegments.length > 0 ? '/' + pathSegments.join('/') : '';
+        const jarVirtualPath = `/app${subPath}/student-result-management-system-1.0.0.jar`;
+
+        // Launch the fat JAR
+        cheerpjRunJar(jarVirtualPath)
+          .then(code => console.log('[CheerpJ] Java app terminated with code:', code))
+          .catch(err => console.error('[CheerpJ] Execution error:', err));
+
+        // Fade out overlay when successfully running
+        dismissOverlay();
+
+      } catch (err) {
+        console.error('CheerpJ Launch Error:', err);
+        loaderSpinner.style.display = 'none';
+        loaderTrack.style.display = 'none';
+
+        const isEvalError = err.name === 'EvalError' || (err.message && err.message.includes('unsafe-eval'));
+
+        if (isEvalError) {
+          loaderTitle.textContent = 'CSP / WebAssembly Restriction';
+          loaderDesc.innerHTML = 
+            '<div style="text-align:left; font-size:12px; background:#0f172a; padding:12px; border-radius:8px; border:1px solid #334155; margin-bottom:12px;">' +
+            '<strong style="color:#ef4444;">Why is initialization blocked?</strong><br>' +
+            'The cloud edge enforces a strict <code>Content-Security-Policy</code> without <code>\'unsafe-eval\'</code>. ' +
+            'Because CheerpJ\'s Java 17 WebAssembly JIT engine requires eval for dynamic bytecode generation, the browser blocks initialization under this CSP.' +
+            '</div>' +
+            '<div style="font-size:13px; color:#94a3b8; text-align:left;">' +
+            '✅ <strong>Local Web:</strong> Fully unrestricted via <code>run-browser.bat</code> at <code>http://localhost:8080</code><br>' +
+            '✅ <strong>Cloud Hosting:</strong> Deploy to Vercel/Netlify with proper headers (see included vercel.json / netlify.toml)<br>' +
+            '✅ <strong>Desktop App:</strong> Direct native execution via <code>run.bat</code>' +
+            '</div>';
+        } else {
+          loaderTitle.textContent = 'Web Engine Notice';
+          loaderDesc.innerHTML = '<span style="color:#ef4444; font-weight:600;">' + err.message + '</span>';
+        }
+
+        loaderActions.style.display = 'block';
+        loaderActions.innerHTML = 
+          '<a href="http://localhost:8080" class="action-btn btn-primary">Open Local Web (localhost:8080)</a>' +
+          '<button onclick="location.reload()" class="action-btn btn-secondary">Retry</button>';
+
+        statusText.textContent = isEvalError ? 'Blocked by Cloud CSP' : 'Engine Error';
+        statusDot.style.backgroundColor = '#ef4444';
+        statusDot.style.boxShadow = '0 0 8px #ef4444';
+      }
+    }
+
+    window.addEventListener('load', launchApp);
+  </script>
+</body>
+</html>

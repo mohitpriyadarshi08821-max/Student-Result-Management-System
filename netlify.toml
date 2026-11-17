@@ -1,0 +1,18 @@
+[build]
+  publish = "web"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "require-corp"
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, HEAD, OPTIONS"
+    Access-Control-Allow-Headers = "Range, Content-Type, Accept"
+    Access-Control-Expose-Headers = "Content-Range, Content-Length, Accept-Ranges"
+    Accept-Ranges = "bytes"
+
+[[redirects]]
+  from = "/app/*"
+  to = "/:splat"
+  status = 200

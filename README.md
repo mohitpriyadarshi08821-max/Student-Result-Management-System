@@ -79,3 +79,77 @@ To package into an executable JAR:
 mvn clean package
 ```
 
+---
+
+## 🚀 Deployment & Web Browser Execution
+
+This project is configured for **CheerpJ WebAssembly** and **jDeploy**, allowing you to run the Java Swing interface directly inside modern web browsers or deploy native desktop installers.
+
+### 1. Run in Your Web Browser Locally (Instant)
+
+Launch the complete Java Swing desktop interface inside Google Chrome, Edge, Firefox, Brave, or Safari:
+
+- **Option A — Quick Launch (Windows):**  
+  Double-click **`run-browser.bat`** in the project folder.
+
+- **Option B — Command Line (npm / Node):**
+  ```bash
+  npm run web
+  ```
+  Then navigate to **`http://localhost:8080`**.
+
+> **Demo Login Credentials:**  
+> - Username: **`admin`**  
+> - Password: **`admin123`**  
+>  
+> The application features a built-in offline demo mode with sample student profiles, courses, GPA calculations, and marksheet generation so all modules work smoothly inside the browser sandbox even without an external MySQL instance.
+
+---
+
+### 2. Cloud Deployment (Open in Any Browser Online)
+
+The project includes pre-configured deployment manifests for the most popular free cloud hosting platforms:
+
+#### A. Deploy to Vercel (1-Command Deploy)
+The project includes a ready-to-use [`vercel.json`](file:///vercel.json) configured with the necessary HTTP Range request and Cross-Origin Isolation headers:
+```bash
+npx vercel
+```
+*Follow the interactive prompt and your live HTTPS browser link will be generated automatically.*
+
+#### B. Deploy to Netlify
+The project includes [`netlify.toml`](file:///netlify.toml) configured for static asset publishing with full streaming support:
+```bash
+npx netlify deploy --prod
+```
+*Or drag and drop the `web/` folder directly into your [Netlify App Dashboard](https://app.netlify.com).*
+
+#### C. Deploy to GitHub Pages (Automated CI/CD)
+The project includes an automated GitHub Actions workflow at [`.github/workflows/deploy-pages.yml`](file:///.github/workflows/deploy-pages.yml).  
+1. Push your repository to GitHub:
+   ```bash
+   git add .
+   git commit -m "Configure web deployment"
+   git push origin main
+   ```
+2. In your GitHub repository: Go to **Settings** > **Pages** > **Build and deployment** > Source: **GitHub Actions**.
+3. Every push to `main` automatically builds and deploys your web app to `https://<your-username>.github.io/<repo-name>/`.
+
+---
+
+### 3. Native Desktop Installers with jDeploy
+
+jDeploy creates native platform installers (`.exe` / `.msi` for Windows, `.dmg` for macOS, `.deb` for Linux):
+
+1. **Verify `package.json`:**  
+   The project root includes `package.json` pointing to `target/student-result-management-system-1.0.0.jar`.
+
+2. **Publish via jDeploy CLI:**
+   ```bash
+   npx jdeploy publish
+   ```
+
+3. **Automated CI/CD via GitHub Actions:**  
+   The workflow at [`.github/workflows/jdeploy.yml`](file:///.github/workflows/jdeploy.yml) automatically compiles, tests, packages, and publishes releases whenever you push a version tag (e.g., `git tag v1.0.0 && git push --tags`).
+
+

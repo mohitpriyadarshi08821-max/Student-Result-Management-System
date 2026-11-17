@@ -23,7 +23,10 @@ import java.awt.geom.RoundRectangle2D;
  * high-contrast dark button typography, subtle hover/pressed animations,
  * and zero vertex clipping across all operating systems.
  */
+@SuppressWarnings({"serial", "this-escape"})
 public class RoundedButton extends JButton {
+
+    private static final long serialVersionUID = 1L;
 
     private int cornerRadius;
     private Color normalBg;

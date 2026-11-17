@@ -15,6 +15,7 @@ import result.service.StudentService;
 import result.service.SubjectService;
 
 import java.awt.GraphicsEnvironment;
+import javax.swing.JFrame;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -299,6 +300,10 @@ public class DashboardTest {
 
     private static void testDashboardUI(AuthService authService, StudentService studentService, SubjectService subjectService, ResultService resultService) {
         DashboardFrame frame = new DashboardFrame(authService, studentService, subjectService, resultService);
+
+        if ((frame.getExtendedState() & JFrame.MAXIMIZED_BOTH) != JFrame.MAXIMIZED_BOTH) {
+            throw new AssertionError("DashboardFrame must be configured with MAXIMIZED_BOTH, found: " + frame.getExtendedState());
+        }
 
         if (frame.getTabbedPane() == null || frame.getTabbedPane().getTabCount() != 4) {
             throw new AssertionError("Dashboard tabbedPane must have 4 tabs, found: " +

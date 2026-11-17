@@ -11,7 +11,10 @@ import java.awt.RenderingHints;
 /**
  * A JPanel container with anti-aliased semi-rounded corners and an optional border.
  */
+@SuppressWarnings({"serial", "this-escape"})
 public class RoundedPanel extends JPanel {
+
+    private static final long serialVersionUID = 1L;
 
     private int cornerRadius;
     private Color backgroundColor;

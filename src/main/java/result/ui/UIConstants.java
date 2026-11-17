@@ -63,13 +63,13 @@ public final class UIConstants {
      */
     public static Border createRoundedBorder(Color color, int radius, int top, int left, int bottom, int right) {
         return new CompoundBorder(
-                new RoundedBorder(color, radius, 1),
+                new RoundedBorder(color, radius, 1.2f),
                 new EmptyBorder(top, left, bottom, right)
         );
     }
 
     public static Border createInputBorder() {
-        return createRoundedBorder(new Color(203, 213, 225), CORNER_RADIUS_SM, 6, 10, 6, 10);
+        return createRoundedBorder(new Color(175, 185, 200), CORNER_RADIUS_SM, 6, 10, 6, 10);
     }
 
     public static Border createCardBorder() {

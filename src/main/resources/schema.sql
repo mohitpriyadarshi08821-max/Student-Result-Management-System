@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS subjects (
     subject_code VARCHAR(20) NOT NULL UNIQUE,
     subject_name VARCHAR(100) NOT NULL,
     max_marks INT DEFAULT 100,
-    pass_marks INT DEFAULT 35
+    pass_marks INT DEFAULT 35,
+    credits INT DEFAULT 4
 );
 
 -- 4. Results Table

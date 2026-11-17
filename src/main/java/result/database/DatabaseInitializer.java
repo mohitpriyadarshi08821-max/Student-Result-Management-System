@@ -87,7 +87,15 @@ public class DatabaseInitializer {
                     "subject_code VARCHAR(20) NOT NULL UNIQUE, " +
                     "subject_name VARCHAR(100) NOT NULL, " +
                     "max_marks INT DEFAULT 100, " +
-                    "pass_marks INT DEFAULT 35)");
+                    "pass_marks INT DEFAULT 35, " +
+                    "credits INT DEFAULT 4)");
+
+            // Safe column migration for existing databases
+            try {
+                stmt.executeUpdate("ALTER TABLE subjects ADD COLUMN credits INT DEFAULT 4");
+            } catch (SQLException ignored) {
+                // Column already exists
+            }
 
             // 4. Results table
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS results (" +
@@ -132,11 +140,38 @@ public class DatabaseInitializer {
                     }
                 }
             }
+
+            // 7. Seed default students matching the design directory if empty
+            try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS total FROM students")) {
+                if (rs.next() && rs.getInt("total") == 0) {
+                    try (PreparedStatement insertStu = conn.prepareStatement(
+                            "INSERT INTO students (roll_number, first_name, last_name, email, course, semester, gender, dob) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        insertStudent(insertStu, "101", "Ali", "Khan", "ali.khan@example.com", "B.Tech Computer Science", 4, "Male", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(20)));
+                        insertStudent(insertStu, "102", "Sara", "Ahmed", "sara.ahmed@example.com", "BCA", 2, "Female", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(19)));
+                        insertStudent(insertStu, "103", "Ahmed", "Raza", "ahmed.raza@example.com", "B.Tech Information Technology", 6, "Male", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(21)));
+                        insertStudent(insertStu, "104", "Fatima", "Noor", "fatima.noor@example.com", "MCA", 4, "Female", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(20)));
+                        insertStudent(insertStu, "105", "Usman", "Tariq", "usman.tariq@example.com", "B.Sc Computer Science", 8, "Male", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(22)));
+                        System.out.println("[INFO] Standard reference students initialized successfully.");
+                    }
+                }
+            }
             return true;
         } catch (SQLException e) {
             System.err.println("[WARN] Database initialization notice: " + e.getMessage());
             return false;
         }
+    }
+
+    private static void insertStudent(PreparedStatement stmt, String roll, String first, String last, String email, String course, int sem, String gender, java.sql.Date dob) throws SQLException {
+        stmt.setString(1, roll);
+        stmt.setString(2, first);
+        stmt.setString(3, last);
+        stmt.setString(4, email);
+        stmt.setString(5, course);
+        stmt.setInt(6, sem);
+        stmt.setString(7, gender);
+        stmt.setDate(8, dob);
+        stmt.executeUpdate();
     }
 
     private static void insertSubject(PreparedStatement stmt, String code, String name, int max, int pass) throws SQLException {

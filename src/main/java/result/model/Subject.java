@@ -10,16 +10,30 @@ public class Subject {
     private String subjectName;
     private int maxMarks;
     private int passMarks;
+    private int credits = 4;
 
     public Subject() {
     }
 
     public Subject(int subjectId, String subjectCode, String subjectName, int maxMarks, int passMarks) {
+        this(subjectId, subjectCode, subjectName, maxMarks, passMarks, 4);
+    }
+
+    public Subject(int subjectId, String subjectCode, String subjectName, int maxMarks, int passMarks, int credits) {
         this.subjectId = subjectId;
         this.subjectCode = subjectCode;
         this.subjectName = subjectName;
         this.maxMarks = maxMarks;
         this.passMarks = passMarks;
+        this.credits = credits > 0 ? credits : 4;
+    }
+
+    public int getCredits() {
+        return credits;
+    }
+
+    public void setCredits(int credits) {
+        this.credits = credits > 0 ? credits : 4;
     }
 
     public int getSubjectId() {
