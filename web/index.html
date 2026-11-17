@@ -370,18 +370,28 @@
 
         statusText.textContent = 'App Running';
 
-        // Dynamic virtual path: supports root domains, localhost, and GitHub Pages repository subpaths
-        const pathSegments = window.location.pathname.replace(/\/+$/, '').split('/').filter(Boolean);
-        if (pathSegments.length > 0 && pathSegments[pathSegments.length - 1].includes('.')) {
-          pathSegments.pop();
-        }
-        const subPath = pathSegments.length > 0 ? '/' + pathSegments.join('/') : '';
-        const jarVirtualPath = `/app${subPath}/student-result-management-system-1.0.0.jar`;
+        // In CheerpJ, /app/ maps to the directory where index.html is hosted.
+        // On GitHub Pages (https://user.github.io/repo/), /app/ already points to https://user.github.io/repo/
+        const jarName = 'student-result-management-system-1.0.0.jar';
+        const jarVirtualPath = `/app/${jarName}`;
+        console.log('[CheerpJ] Launching JAR:', jarVirtualPath);
 
-        // Launch the fat JAR
+        // Launch the fat JAR with fallback
         cheerpjRunJar(jarVirtualPath)
           .then(code => console.log('[CheerpJ] Java app terminated with code:', code))
-          .catch(err => console.error('[CheerpJ] Execution error:', err));
+          .catch(err => {
+            console.warn('[CheerpJ] Direct /app/ path failed, attempting subpath fallback:', err);
+            const pathSegments = window.location.pathname.replace(/\/+$/, '').split('/').filter(Boolean);
+            if (pathSegments.length > 0 && pathSegments[pathSegments.length - 1].includes('.')) {
+              pathSegments.pop();
+            }
+            const subPath = pathSegments.length > 0 ? '/' + pathSegments.join('/') : '';
+            if (subPath) {
+              const fallbackPath = `/app${subPath}/${jarName}`;
+              console.log('[CheerpJ] Trying fallback path:', fallbackPath);
+              cheerpjRunJar(fallbackPath).catch(e => console.error('[CheerpJ] Fallback failed:', e));
+            }
+          });
 
         // Fade out overlay when successfully running
         dismissOverlay();
