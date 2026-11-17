@@ -558,7 +558,7 @@ public class SubjectManagementPanel extends JPanel {
             if (subjects != null && !subjects.isEmpty()) {
                 allLoadedSubjects.addAll(subjects);
             }
-        } catch (DatabaseException ex) {
+        } catch (Throwable ex) {
             System.err.println("[WARN] Database not available while loading subjects: " + ex.getMessage());
         }
 

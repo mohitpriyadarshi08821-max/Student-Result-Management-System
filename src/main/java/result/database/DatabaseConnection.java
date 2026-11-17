@@ -92,10 +92,16 @@ public class DatabaseConnection {
     }
 
     public Connection getConnection() throws SQLException {
+        if (result.ui.MainApplication.isBrowserEnvironment()) {
+            throw new SQLException("Direct TCP raw socket connection to MySQL (port 3306) is blocked by browser WebAssembly security sandbox.");
+        }
         return DriverManager.getConnection(url, user, password);
     }
 
     public Connection getRootServerConnection() throws SQLException {
+        if (result.ui.MainApplication.isBrowserEnvironment()) {
+            throw new SQLException("Direct TCP raw socket connection to MySQL (port 3306) is blocked by browser WebAssembly security sandbox.");
+        }
         String baseServerUrl = url.replaceFirst("/student_result_db(\\?|$)", "/$1");
         return DriverManager.getConnection(baseServerUrl, user, password);
     }

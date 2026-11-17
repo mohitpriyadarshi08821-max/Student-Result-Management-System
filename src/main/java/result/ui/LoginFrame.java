@@ -359,25 +359,42 @@ public class LoginFrame extends JFrame {
                     boolean authenticated = get();
                     if (authenticated) {
                         setStatus("Login successful! Loading dashboard...", new Color(5, 150, 105));
+                        System.out.println("[INFO] Authentication successful for user: " + username);
+                        System.out.println("[SRMS-DIAGNOSTIC] STAGE:INITIALIZING_DASHBOARD");
+
+                        // Instantiate dashboard
                         DashboardFrame dashboard = new DashboardFrame(authService);
+                        System.out.println("[SRMS-DIAGNOSTIC] STAGE:DASHBOARD_INSTANTIATED");
+
+                        // Seamless panel-switching: Replace login card with dashboard in active window
+                        setContentPane(dashboard.getContentPane());
+                        setTitle(dashboard.getTitle());
+                        setSize(1024, 680);
                         try {
-                            dashboard.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                            setLocationRelativeTo(null);
                         } catch (Throwable ignored) {
                         }
-                        dashboard.setVisible(true);
-                        try {
-                            dashboard.toFront();
-                            dashboard.requestFocus();
-                        } catch (Throwable ignored) {
+                        revalidate();
+                        repaint();
+
+                        if (!MainApplication.isBrowserEnvironment()) {
+                            try {
+                                setExtendedState(JFrame.MAXIMIZED_BOTH);
+                            } catch (Throwable ignored) {
+                            }
                         }
-                        dispose();
+
+                        System.out.println("[SRMS-DIAGNOSTIC] STAGE:DASHBOARD_RENDERED");
+                        System.out.println("[INFO] Dashboard loaded and interactive.");
                     } else {
                         setStatus("Invalid username or password.", new Color(220, 38, 38));
                         loginButton.setEnabled(true);
                         passwordField.setText("");
                         passwordField.requestFocusInWindow();
                     }
-                } catch (Exception ex) {
+                } catch (Throwable ex) {
+                    System.err.println("[ERROR] Login completion error: " + ex.getMessage());
+                    ex.printStackTrace();
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
                     if (cause instanceof ValidationException) {
                         setStatus(cause.getMessage(), new Color(220, 38, 38));
@@ -395,7 +412,7 @@ public class LoginFrame extends JFrame {
                                 JOptionPane.ERROR_MESSAGE
                         );
                     } else {
-                        setStatus("An unexpected error occurred during login.", new Color(220, 38, 38));
+                        setStatus("Error loading dashboard: " + (cause.getMessage() != null ? cause.getMessage() : "Unknown error"), new Color(220, 38, 38));
                     }
                     loginButton.setEnabled(true);
                 }
@@ -421,6 +438,28 @@ public class LoginFrame extends JFrame {
     private void setStatus(String message, Color color) {
         statusLabel.setForeground(color);
         statusLabel.setText(message);
+    }
+
+    public void resetToLoginView() {
+        setTitle(UIConstants.APP_TITLE + " - Login");
+        CampusHallwayBackdropPanel mainContainer = new CampusHallwayBackdropPanel(new BorderLayout());
+        mainContainer.add(createCenterCardWrapper(), BorderLayout.CENTER);
+        setContentPane(mainContainer);
+        if (passwordField != null) {
+            passwordField.setText("");
+        }
+        if (loginButton != null) {
+            loginButton.setEnabled(true);
+            getRootPane().setDefaultButton(loginButton);
+        }
+        setStatus(" ", Color.BLACK);
+        setSize(1024, 680);
+        try {
+            setLocationRelativeTo(null);
+        } catch (Throwable ignored) {
+        }
+        revalidate();
+        repaint();
     }
 
     // Component getters for programmatic inspection & test suites

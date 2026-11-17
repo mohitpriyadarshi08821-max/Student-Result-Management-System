@@ -87,10 +87,17 @@ public class DashboardFrame extends JFrame {
         this.subjectService = subjectService;
         this.resultService = resultService;
 
-        // Ensure database tables and initial curriculum seed data are present
+        // Ensure database tables and initial curriculum seed data are present on desktop in background
         try {
-            DatabaseInitializer.initializeDatabase();
-        } catch (Exception ignored) {
+            if (!MainApplication.isBrowserEnvironment() && !DatabaseInitializer.isInitialized()) {
+                new Thread(() -> {
+                    try {
+                        DatabaseInitializer.initializeDatabase();
+                    } catch (Throwable ignored) {
+                    }
+                }, "SRMS-Dashboard-DBInit").start();
+            }
+        } catch (Throwable ignored) {
         }
 
         initComponents();
@@ -331,11 +338,13 @@ public class DashboardFrame extends JFrame {
         if (confirm == JOptionPane.YES_OPTION) {
             authService.logout();
             SwingUtilities.invokeLater(() -> {
-                LoginFrame loginFrame = new LoginFrame(authService);
-                loginFrame.setVisible(true);
-                loginFrame.toFront();
-                loginFrame.requestFocus();
-                dispose();
+                java.awt.Window win = SwingUtilities.getWindowAncestor(this.getContentPane());
+                if (win instanceof LoginFrame loginFrame) {
+                    loginFrame.resetToLoginView();
+                } else {
+                    dispose();
+                    new LoginFrame(authService).setVisible(true);
+                }
             });
         }
     }

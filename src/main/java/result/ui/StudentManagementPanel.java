@@ -635,7 +635,7 @@ public class StudentManagementPanel extends JPanel {
             if (students != null && !students.isEmpty()) {
                 allLoadedStudents.addAll(students);
             }
-        } catch (DatabaseException ex) {
+        } catch (Throwable ex) {
             System.err.println("[WARN] Database not available while loading students: " + ex.getMessage());
         }
 

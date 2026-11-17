@@ -769,7 +769,7 @@ public class ResultViewPanel extends JPanel {
 
         try {
             currentSummary = resultService.generateResultSummary(roll);
-        } catch (RecordNotFoundException | DatabaseException ex) {
+        } catch (Throwable ex) {
             // Check design seed summary fallback for offline / preview mode
             currentSummary = findSeedSummaryByRoll(roll);
         }

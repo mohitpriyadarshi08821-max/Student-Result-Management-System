@@ -986,7 +986,7 @@ public class ResultEntryPanel extends JPanel {
                     resultsTableModel.addRow(rowData);
                 }
             }
-        } catch (DatabaseException ignored) {
+        } catch (Throwable ignored) {
         }
 
         // If no results from DB, supply design seed results matching the reference design
@@ -1062,7 +1062,7 @@ public class ResultEntryPanel extends JPanel {
             if (subjectList == null || subjectList.isEmpty()) {
                 subjectList = createDesignSeedSubjects();
             }
-        } catch (DatabaseException ex) {
+        } catch (Throwable ex) {
             subjectList = createDesignSeedSubjects();
         }
 

@@ -14,6 +14,10 @@ public class DatabaseInitializer {
 
     private static volatile boolean isInitialized = false;
 
+    public static boolean isInitialized() {
+        return isInitialized;
+    }
+
     public static synchronized void initializeDatabase() {
         if (isInitialized) {
             return;
