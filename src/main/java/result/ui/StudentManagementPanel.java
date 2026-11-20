@@ -1,5 +1,6 @@
 package result.ui;
 
+import result.dao.InMemoryDataStore;
 import result.dao.StudentDAOImpl;
 import result.exception.DatabaseException;
 import result.exception.DuplicateRecordException;
@@ -541,7 +542,7 @@ public class StudentManagementPanel extends JPanel {
         });
 
         JScrollPane scrollPane = new JScrollPane(studentTable);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        ModernScrollBarUI.apply(scrollPane);
         scrollPane.getViewport().setBackground(Color.WHITE);
         card.add(scrollPane, BorderLayout.CENTER);
 
@@ -654,12 +655,7 @@ public class StudentManagementPanel extends JPanel {
     }
 
     private List<Student> createDesignSeedStudents() {
-        List<Student> list = new ArrayList<>();
-        list.add(new Student(1, "2510001320", "Mohit", "Priyadarshi", "mohit.priyadarshi@example.com", "B.Tech Computer Science", 4, "Male", LocalDate.now().minusYears(19)));
-        list.add(new Student(2, "2510001331", "Moulik", "Tiwari", "moulik.tiwari@example.com", "BCA", 2, "Male", LocalDate.now().minusYears(19)));
-        list.add(new Student(3, "2510001319", "Adarsh", "Kumar", "adarsh.kumar@example.com", "B.Tech IT", 4, "Male", LocalDate.now().minusYears(20)));
-        list.add(new Student(4, "2510001212", "Akshay", "Bharadwaj", "akshay.bharadwaj@example.com", "MCA", 2, "Male", LocalDate.now().minusYears(19)));
-        return list;
+        return InMemoryDataStore.getInstance().getAllStudents();
     }
 
     private void filterTable() {
@@ -734,17 +730,22 @@ public class StudentManagementPanel extends JPanel {
 
     private String calculateGrade(Student s) {
         String roll = s.getRollNumber();
+        if ("2510001283".equals(roll)) return "A-";
+        if ("2510001205".equals(roll)) return "B";
+        if ("2510001348".equals(roll)) return "A";
         if ("2510001320".equals(roll)) return "B";
         if ("2510001331".equals(roll)) return "A-";
         if ("2510001319".equals(roll)) return "A";
         if ("2510001212".equals(roll)) return "B";
 
         int id = s.getStudentId();
-        if (id == 1 || "101".equals(roll)) return "B";
-        if (id == 2 || "102".equals(roll)) return "A-";
+        if (id == 1 || "101".equals(roll)) return "A-";
+        if (id == 2 || "102".equals(roll)) return "B";
         if (id == 3 || "103".equals(roll)) return "A";
         if (id == 4 || "104".equals(roll)) return "B";
-        if (id == 5 || "105".equals(roll)) return "A";
+        if (id == 5 || "105".equals(roll)) return "A-";
+        if (id == 6 || "106".equals(roll)) return "A";
+        if (id == 7 || "107".equals(roll)) return "B";
 
         int mod = Math.abs(id % 4);
         return switch (mod) {

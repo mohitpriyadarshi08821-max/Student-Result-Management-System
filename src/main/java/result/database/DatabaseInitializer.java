@@ -144,11 +144,13 @@ public class DatabaseInitializer {
                 if (rs.next() && rs.getInt("total") == 0) {
                     try (PreparedStatement insertSub = conn.prepareStatement(
                             "INSERT INTO subjects (subject_code, subject_name, max_marks, pass_marks) VALUES (?, ?, ?, ?)")) {
-                        insertSubject(insertSub, "CS101", "Java Programming", 100, 35);
+                        insertSubject(insertSub, "CS107", "Computer Architecture And Organization", 100, 35);
                         insertSubject(insertSub, "CS102", "Database Management Systems", 100, 35);
                         insertSubject(insertSub, "CS103", "Data Structures & Algorithms", 100, 35);
                         insertSubject(insertSub, "CS104", "Computer Networks", 100, 35);
                         insertSubject(insertSub, "CS105", "Operating Systems", 100, 35);
+                        insertSubject(insertSub, "CS106", "Artificial Intelligence", 100, 35);
+                        insertSubject(insertSub, "CS101", "Java Programming", 100, 35);
                         System.out.println("[INFO] Standard curriculum subjects initialized successfully.");
                     }
                 }
@@ -159,11 +161,13 @@ public class DatabaseInitializer {
                 if (rs.next() && rs.getInt("total") == 0) {
                     try (PreparedStatement insertStu = conn.prepareStatement(
                             "INSERT INTO students (roll_number, first_name, last_name, email, course, semester, gender, dob) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
-                        insertStudent(insertStu, "101", "Ali", "Khan", "ali.khan@example.com", "B.Tech Computer Science", 4, "Male", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(20)));
-                        insertStudent(insertStu, "102", "Sara", "Ahmed", "sara.ahmed@example.com", "BCA", 2, "Female", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(19)));
-                        insertStudent(insertStu, "103", "Ahmed", "Raza", "ahmed.raza@example.com", "B.Tech Information Technology", 6, "Male", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(21)));
-                        insertStudent(insertStu, "104", "Fatima", "Noor", "fatima.noor@example.com", "MCA", 4, "Female", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(20)));
-                        insertStudent(insertStu, "105", "Usman", "Tariq", "usman.tariq@example.com", "B.Sc Computer Science", 8, "Male", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(22)));
+                        insertStudent(insertStu, "2510001283", "Utkarsh", "Mishra", "utkarsh.mishra@example.com", "B.Tech Computer Science", 4, "Male", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(19)));
+                        insertStudent(insertStu, "2510001205", "Abhishek", "Kumar", "abhishek.kumar@example.com", "B.Tech Information Technology", 4, "Male", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(19)));
+                        insertStudent(insertStu, "2510001348", "Aditya", "Saini", "aditya.saini@example.com", "BCA", 2, "Male", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(18)));
+                        insertStudent(insertStu, "2510001320", "Mohit", "Priyadarshi", "mohit.priyadarshi@example.com", "B.Tech Computer Science", 4, "Male", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(19)));
+                        insertStudent(insertStu, "2510001331", "Moulik", "Tiwari", "moulik.tiwari@example.com", "BCA", 2, "Male", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(19)));
+                        insertStudent(insertStu, "2510001319", "Adarsh", "Kumar", "adarsh.kumar@example.com", "B.Tech IT", 4, "Male", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(20)));
+                        insertStudent(insertStu, "2510001212", "Akshay", "Bharadwaj", "akshay.bharadwaj@example.com", "MCA", 2, "Male", java.sql.Date.valueOf(java.time.LocalDate.now().minusYears(19)));
                         System.out.println("[INFO] Standard reference students initialized successfully.");
                     }
                 }

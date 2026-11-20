@@ -1,5 +1,6 @@
 package result.ui;
 
+import result.dao.InMemoryDataStore;
 import result.dao.ResultDAOImpl;
 import result.dao.StudentDAOImpl;
 import result.dao.SubjectDAOImpl;
@@ -27,6 +28,8 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import java.awt.Window;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
@@ -530,7 +533,7 @@ public class ResultViewPanel extends JPanel {
         markSheetTable.getColumnModel().getColumn(7).setCellRenderer(new ResultEntryPanel.StatusPillRenderer());
 
         JScrollPane scrollPane = new JScrollPane(markSheetTable);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        ModernScrollBarUI.apply(scrollPane);
         scrollPane.getViewport().setBackground(Color.WHITE);
         reportContainer.add(scrollPane, BorderLayout.CENTER);
 
@@ -787,84 +790,17 @@ public class ResultViewPanel extends JPanel {
         }
     }
 
-    private Result makeSeedResult(int resultId, int studentId, int subjectId, Subject subject, double marks, String grade) {
-        Result r = new Result(resultId, studentId, subjectId, marks, grade);
-        r.setSubject(subject);
-        return r;
+    public void refreshCurrentView() {
+        if (searchRollNumberField != null) {
+            String roll = searchRollNumberField.getText().trim();
+            if (!roll.isEmpty()) {
+                handleSearch();
+            }
+        }
     }
 
     private StudentResultSummary findSeedSummaryByRoll(String roll) {
-        if ("2510001320".equals(roll)) {
-            Student s = new Student(1, "2510001320", "Mohit", "Priyadarshi", "mohit@example.com", "B.Tech Computer Science", 4, "Male", LocalDate.now().minusYears(19));
-            List<Result> results = new ArrayList<>();
-            results.add(makeSeedResult(1, 1, 1, new Subject(1, "CS101", "Java Programming", 100, 35, 4), 88.0, "B"));
-            results.add(makeSeedResult(2, 1, 2, new Subject(2, "CS102", "Database Management Systems", 100, 35, 4), 92.0, "A"));
-            results.add(makeSeedResult(3, 1, 3, new Subject(3, "CS103", "Data Structures & Algorithms", 100, 35, 4), 85.0, "A-"));
-            results.add(makeSeedResult(4, 1, 4, new Subject(4, "CS104", "Computer Networks", 100, 35, 3), 78.0, "B"));
-            results.add(makeSeedResult(5, 1, 5, new Subject(5, "CS105", "Operating Systems", 100, 35, 3), 72.0, "B"));
-
-            StudentResultSummary sum = new StudentResultSummary(s, results);
-            sum.setTotalMarksObtained(415.0);
-            sum.setTotalMaxMarks(500.0);
-            sum.setPercentage(83.0);
-            sum.setTotalCredits(18);
-            sum.setTotalCreditPoints(152.0);
-            sum.setSgpa(8.44);
-            sum.setOverallGrade("A");
-            sum.setDivision("First Class with Distinction");
-            sum.setStatus("PASS");
-            return sum;
-        } else if ("2510001331".equals(roll)) {
-            Student s = new Student(2, "2510001331", "Moulik", "Tiwari", "moulik@example.com", "BCA", 2, "Male", LocalDate.now().minusYears(19));
-            List<Result> results = new ArrayList<>();
-            results.add(makeSeedResult(6, 2, 1, new Subject(1, "CS101", "Java Programming", 100, 35, 4), 90.0, "A"));
-            results.add(makeSeedResult(7, 2, 2, new Subject(2, "CS102", "Database Management Systems", 100, 35, 4), 86.0, "A-"));
-
-            StudentResultSummary sum = new StudentResultSummary(s, results);
-            sum.setTotalMarksObtained(176.0);
-            sum.setTotalMaxMarks(200.0);
-            sum.setPercentage(88.0);
-            sum.setTotalCredits(8);
-            sum.setTotalCreditPoints(72.0);
-            sum.setSgpa(9.00);
-            sum.setOverallGrade("A");
-            sum.setDivision("First Class with Distinction");
-            sum.setStatus("PASS");
-            return sum;
-        } else if ("2510001319".equals(roll)) {
-            Student s = new Student(3, "2510001319", "Adarsh", "Kumar", "adarsh@example.com", "B.Tech IT", 4, "Male", LocalDate.now().minusYears(20));
-            List<Result> results = new ArrayList<>();
-            results.add(makeSeedResult(8, 3, 1, new Subject(1, "CS101", "Java Programming", 100, 35, 4), 94.0, "A"));
-
-            StudentResultSummary sum = new StudentResultSummary(s, results);
-            sum.setTotalMarksObtained(94.0);
-            sum.setTotalMaxMarks(100.0);
-            sum.setPercentage(94.0);
-            sum.setTotalCredits(4);
-            sum.setTotalCreditPoints(40.0);
-            sum.setSgpa(10.00);
-            sum.setOverallGrade("A+");
-            sum.setDivision("First Class with Distinction");
-            sum.setStatus("PASS");
-            return sum;
-        } else if ("2510001212".equals(roll)) {
-            Student s = new Student(4, "2510001212", "Akshay", "Bharadwaj", "akshay@example.com", "MCA", 2, "Male", LocalDate.now().minusYears(19));
-            List<Result> results = new ArrayList<>();
-            results.add(makeSeedResult(9, 4, 1, new Subject(1, "CS101", "Java Programming", 100, 35, 4), 76.0, "B"));
-
-            StudentResultSummary sum = new StudentResultSummary(s, results);
-            sum.setTotalMarksObtained(76.0);
-            sum.setTotalMaxMarks(100.0);
-            sum.setPercentage(76.0);
-            sum.setTotalCredits(4);
-            sum.setTotalCreditPoints(32.0);
-            sum.setSgpa(8.00);
-            sum.setOverallGrade("B");
-            sum.setDivision("First Class");
-            sum.setStatus("PASS");
-            return sum;
-        }
-        return null;
+        return InMemoryDataStore.getInstance().generateSummaryForRoll(roll);
     }
 
     public void displaySummary(StudentResultSummary summary) {
@@ -911,13 +847,13 @@ public class ResultViewPanel extends JPanel {
 
         // Update Top 4 Metric Stat Cards
         totalSubjectsCard.setCount(String.valueOf(summary.getResults().size()));
-        totalMarksCard.setCount(String.format("%.1f / %.0f", summary.getTotalMarksObtained(), summary.getTotalMaxMarks()));
-        percentageCard.setCount(String.format("%.2f", summary.getSgpa() > 0 ? summary.getSgpa() : (summary.getPercentage() / 10.0)));
+        totalMarksCard.setCount(String.format(java.util.Locale.US, "%.1f / %.0f", summary.getTotalMarksObtained(), summary.getTotalMaxMarks()));
+        percentageCard.setCount(String.format(java.util.Locale.US, "%.2f", summary.getSgpa() > 0 ? summary.getSgpa() : (summary.getPercentage() / 10.0)));
         overallStatusCard.setCount(summary.getStatus() + " (" + summary.getOverallGrade() + ")");
 
         // Update Lower Summary Ribbon
-        totalMarksLabel.setText(String.format("Total Marks: %.1f / %.0f", summary.getTotalMarksObtained(), summary.getTotalMaxMarks()));
-        percentageLabel.setText(String.format("Percentage: %.2f %% | SGPA: %.2f", summary.getPercentage(), summary.getSgpa()));
+        totalMarksLabel.setText(String.format(java.util.Locale.US, "Total Marks: %.1f / %.0f", summary.getTotalMarksObtained(), summary.getTotalMaxMarks()));
+        percentageLabel.setText(String.format(java.util.Locale.US, "Percentage: %.2f %% | SGPA: %.2f", summary.getPercentage(), summary.getSgpa()));
         String division = summary.getDivision() != null && !summary.getDivision().isEmpty() ? summary.getDivision() : "First Class";
         overallGradeLabel.setText("Grade: " + summary.getOverallGrade() + " (" + division + ")");
 
@@ -997,28 +933,16 @@ public class ResultViewPanel extends JPanel {
             return;
         }
 
-        Student s = currentSummary.getStudent();
-        String studentInfo = (s != null ? s.getFullName() + " (Roll No: " + s.getRollNumber() + ")" : "Student");
-
-        String[] options = {"Download PDF Marksheet", "Download HTML Marksheet", "Send to Physical Printer", "Cancel"};
-        int choice = JOptionPane.showOptionDialog(
-                this,
-                "Official Marksheet for: " + studentInfo + "\n\n" +
-                        "Please select how you would like to output or save this marksheet:",
-                "Print / Download Marksheet",
-                JOptionPane.DEFAULT_OPTION,
-                JOptionPane.QUESTION_MESSAGE,
-                UIIconFactory.createPrinterIcon(28, new Color(13, 148, 136)),
-                options,
-                options[0]
-        );
-
-        if (choice == 0) {
-            downloadPdfMarksheet();
-        } else if (choice == 1) {
-            downloadHtmlMarksheet();
-        } else if (choice == 2) {
-            printToPhysicalPrinter();
+        try {
+            PrintMarksheetDialog.show(
+                    this,
+                    currentSummary,
+                    this::downloadPdfMarksheet,
+                    this::downloadHtmlMarksheet,
+                    this::printToPhysicalPrinter
+            );
+        } catch (Throwable t) {
+            t.printStackTrace();
         }
     }
 
@@ -1030,34 +954,34 @@ public class ResultViewPanel extends JPanel {
         String safeName = rawName.replaceAll("[^a-zA-Z0-9_\\-]", "_");
         String defaultFileName = "Marksheet_" + roll + "_" + safeName + ".pdf";
 
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Save / Download Marksheet as PDF");
-        fileChooser.setSelectedFile(new File(defaultFileName));
-        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("PDF Document (*.pdf)", "pdf"));
+        File targetFile = ModernSaveFileDialog.showSaveDialog(
+                this,
+                "Save / Download Marksheet as PDF",
+                currentSummary,
+                defaultFileName,
+                "Adobe PDF Document (*.pdf)",
+                ".pdf"
+        );
 
-        int userSelection = fileChooser.showSaveDialog(this);
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            File targetFile = fileChooser.getSelectedFile();
-            if (!targetFile.getName().toLowerCase().endsWith(".pdf")) {
-                targetFile = new File(targetFile.getParentFile(), targetFile.getName() + ".pdf");
-            }
-
+        if (targetFile != null) {
             try {
                 MarksheetExporter.exportToPdf(currentSummary, targetFile);
-                int openChoice = JOptionPane.showOptionDialog(
-                        this,
-                        "Official Marksheet PDF downloaded successfully!\n\nSaved to: " + targetFile.getAbsolutePath() + "\n\nWould you like to open the PDF now?",
-                        "Download Successful",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.INFORMATION_MESSAGE,
-                        UIIconFactory.createCheckIcon(26, new Color(16, 185, 129)),
-                        new String[]{"Open PDF", "Close"},
-                        "Open PDF"
-                );
+                ModernSaveFileDialog.triggerBrowserDownload(targetFile);
 
-                if (openChoice == JOptionPane.YES_OPTION && Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().open(targetFile);
-                }
+                ModernSaveFileDialog.showSuccessDialog(
+                        this,
+                        targetFile,
+                        true,
+                        () -> {
+                            try {
+                                if (Desktop.isDesktopSupported()) {
+                                    Desktop.getDesktop().open(targetFile);
+                                }
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+                );
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Failed to save PDF marksheet: " + ex.getMessage(),
                         "Download Error", JOptionPane.ERROR_MESSAGE);
@@ -1073,34 +997,34 @@ public class ResultViewPanel extends JPanel {
         String safeName = rawName.replaceAll("[^a-zA-Z0-9_\\-]", "_");
         String defaultFileName = "Marksheet_" + roll + "_" + safeName + ".html";
 
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Save / Download Marksheet as HTML");
-        fileChooser.setSelectedFile(new File(defaultFileName));
-        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("HTML Web Report (*.html)", "html"));
+        File targetFile = ModernSaveFileDialog.showSaveDialog(
+                this,
+                "Save / Download Marksheet as HTML",
+                currentSummary,
+                defaultFileName,
+                "Interactive HTML Transcript (*.html)",
+                ".html"
+        );
 
-        int userSelection = fileChooser.showSaveDialog(this);
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            File targetFile = fileChooser.getSelectedFile();
-            if (!targetFile.getName().toLowerCase().endsWith(".html") && !targetFile.getName().toLowerCase().endsWith(".htm")) {
-                targetFile = new File(targetFile.getParentFile(), targetFile.getName() + ".html");
-            }
-
+        if (targetFile != null) {
             try {
                 MarksheetExporter.exportToHtml(currentSummary, targetFile);
-                int openChoice = JOptionPane.showOptionDialog(
-                        this,
-                        "Official Marksheet HTML report downloaded successfully!\n\nSaved to: " + targetFile.getAbsolutePath() + "\n\nWould you like to open it in your browser now?",
-                        "Download Successful",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.INFORMATION_MESSAGE,
-                        UIIconFactory.createCheckIcon(26, new Color(16, 185, 129)),
-                        new String[]{"Open in Browser", "Close"},
-                        "Open in Browser"
-                );
+                ModernSaveFileDialog.triggerBrowserDownload(targetFile);
 
-                if (openChoice == JOptionPane.YES_OPTION && Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().open(targetFile);
-                }
+                ModernSaveFileDialog.showSuccessDialog(
+                        this,
+                        targetFile,
+                        false,
+                        () -> {
+                            try {
+                                if (Desktop.isDesktopSupported()) {
+                                    Desktop.getDesktop().open(targetFile);
+                                }
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+                );
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Failed to save HTML marksheet: " + ex.getMessage(),
                         "Download Error", JOptionPane.ERROR_MESSAGE);

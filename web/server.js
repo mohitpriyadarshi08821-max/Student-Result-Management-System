@@ -182,7 +182,8 @@ function createHttpServer() {
       'Access-Control-Expose-Headers': 'Content-Range, Content-Length, Accept-Ranges',
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'require-corp',
-      'Accept-Ranges': 'bytes'
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': 'no-cache, must-revalidate'
     };
 
     if (req.method === 'OPTIONS') {
@@ -206,6 +207,59 @@ function createHttpServer() {
         uptime: process.uptime(),
         timestamp: new Date().toISOString()
       }));
+      return;
+    }
+
+    // Live Database Sync Endpoints (Syncs WebAssembly Browser App and Desktop MySQL)
+    if (pathname === '/api/data') {
+      const dataFile = path.join(WEB_ROOT, 'srms_data.json');
+      if (fs.existsSync(dataFile)) {
+        res.writeHead(200, {
+          'Content-Type': 'application/json; charset=UTF-8',
+          ...commonHeaders
+        });
+        fs.createReadStream(dataFile).pipe(res);
+      } else {
+        res.writeHead(404, { 'Content-Type': 'application/json', ...commonHeaders });
+        res.end(JSON.stringify({ error: 'No data file found' }));
+      }
+      return;
+    }
+
+    if (pathname === '/api/sync' && req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk;
+        if (body.length > 10 * 1024 * 1024) { // 10MB guard
+          req.destroy();
+        }
+      });
+      req.on('end', () => {
+        try {
+          // Save to web/srms_data.json and root srms_data.json
+          fs.writeFileSync(path.join(WEB_ROOT, 'srms_data.json'), body, 'utf8');
+          try { fs.writeFileSync(path.join(ROOT_DIR, 'srms_data.json'), body, 'utf8'); } catch (_) {}
+
+          // Asynchronously propagate to MySQL database via SyncCLI
+          const javaCmd = fs.existsSync('C:\\Program Files\\Java\\jdk-26.0.1\\bin\\java.exe')
+            ? 'C:\\Program Files\\Java\\jdk-26.0.1\\bin\\java.exe'
+            : 'java';
+          const cp = 'target/classes;lib/mysql-connector-j-8.3.0.jar;lib/*;target/dependency/*';
+          exec(`"${javaCmd}" -cp "${cp}" result.database.SyncCLI "web/srms_data.json"`, { cwd: ROOT_DIR }, (err, stdout, stderr) => {
+            if (err) {
+              console.warn('[SYNC-BRIDGE] MySQL sync note:', stderr || err.message);
+            } else {
+              console.log('[SYNC-BRIDGE] Successfully synced data from web into MySQL database.');
+            }
+          });
+
+          res.writeHead(200, { 'Content-Type': 'application/json', ...commonHeaders });
+          res.end(JSON.stringify({ status: 'synced', timestamp: new Date().toISOString() }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json', ...commonHeaders });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
       return;
     }
 
@@ -345,17 +399,23 @@ async function bootstrapServer() {
   console.log('  Student Result Management System - Intelligent Server Engine  ');
   console.log('================================================================');
 
-  // Step 1: Check existing server lock file first (fastest, most reliable across all environments)
+  // Step 1: Check existing server lock file and verify it is actively responding
   const existingLock = checkExistingServerLock();
   if (existingLock) {
-    console.log(`[INFO] Existing SRMS server detected running on port ${existingLock.port} (PID: ${existingLock.pid}).`);
-    console.log(`[INFO] Reusing active server instance at ${existingLock.url} (preventing duplicate server).`);
-    if (shouldOpenBrowser) {
-      openBrowser(existingLock.url);
+    const health = await checkSrmsHealth(existingLock.port);
+    if (health.healthy) {
+      console.log(`[INFO] Existing SRMS server detected running on port ${existingLock.port} (PID: ${existingLock.pid}).`);
+      console.log(`[INFO] Reusing active server instance at ${existingLock.url} (preventing duplicate server).`);
+      if (shouldOpenBrowser) {
+        openBrowser(existingLock.url);
+      }
+      console.log('================================================================\n');
+      process.exit(0);
+      return;
+    } else {
+      // Stale lock file from an inactive server; remove it
+      try { fs.unlinkSync(LOCK_FILE); } catch (_) {}
     }
-    console.log('================================================================\n');
-    process.exit(0);
-    return;
   }
 
   // Step 2: Probe default port via HTTP health check in case server was started independently

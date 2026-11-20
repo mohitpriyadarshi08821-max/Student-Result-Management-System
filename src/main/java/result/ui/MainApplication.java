@@ -44,6 +44,13 @@ public class MainApplication {
         System.out.println("[SRMS-DIAGNOSTIC] STAGE:MAIN_INVOKED");
         System.out.println("[INFO] Runtime Environment: " + (isBrowserEnvironment() ? "CheerpJ WebAssembly (Browser)" : "Native Desktop JVM"));
 
+        // Initialize Universal Data Sync Bridge to keep desktop and web app 100% in sync
+        try {
+            result.database.DataSyncBridge.initializeSync();
+        } catch (Throwable t) {
+            System.err.println("[WARN] DataSyncBridge initialization notice: " + t.getMessage());
+        }
+
         // Only pre-initialize MySQL server schema on desktop mode where raw TCP sockets are allowed.
         // In browser WebAssembly, browser sandboxes block raw TCP connections to localhost:3306.
         if (!isBrowserEnvironment()) {
@@ -79,6 +86,12 @@ public class MainApplication {
                         } catch (Throwable ignored) {
                         }
                     }
+                }
+
+                // Global modern scrollbar styling matching sleek SaaS aesthetics
+                try {
+                    UIManager.put("ScrollBarUI", ModernScrollBarUI.class.getName());
+                } catch (Throwable ignored) {
                 }
 
                 LoginFrame loginFrame = new LoginFrame();

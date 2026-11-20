@@ -54,6 +54,10 @@ public class RoundedButton extends JButton {
                 UIConstants.CORNER_RADIUS_SM);
     }
 
+    public RoundedButton(String text, int cornerRadius, Color normalBg, Color hoverBg, Color textColor) {
+        this(text, normalBg, hoverBg, hoverBg != null ? hoverBg.darker() : normalBg, textColor, normalBg != null ? normalBg.darker() : null, cornerRadius);
+    }
+
     public RoundedButton(String text, Color normalBg, Color hoverBg, Color pressedBg,
                          Color darkTextColor, Color borderColor, int cornerRadius) {
         super(text);

@@ -1,6 +1,7 @@
 package result.dao;
 
 import result.database.DatabaseConnection;
+import result.database.DataSyncBridge;
 import result.exception.DatabaseException;
 import result.model.Subject;
 
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * JDBC implementation of the SubjectDAO interface.
+ * JDBC implementation of the SubjectDAO interface with in-memory fallback support.
  */
 public class SubjectDAOImpl implements SubjectDAO {
 
@@ -41,11 +42,12 @@ public class SubjectDAOImpl implements SubjectDAO {
                         subject.setSubjectId(keys.getInt(1));
                     }
                 }
-                return true;
             }
-            return false;
+            InMemoryDataStore.getInstance().putSubjectDirect(subject);
+            DataSyncBridge.exportMySQLToDisk(conn);
+            return true;
         } catch (Exception e) {
-            throw new DatabaseException("Failed to insert subject: " + subject.getSubjectCode(), e);
+            return InMemoryDataStore.getInstance().saveSubject(subject);
         }
     }
 
@@ -66,13 +68,12 @@ public class SubjectDAOImpl implements SubjectDAO {
             stmt.setInt(5, subject.getCredits());
             stmt.setInt(6, subject.getSubjectId());
 
-            int affected = stmt.executeUpdate();
-            if (affected > 0) {
-                return true;
-            }
-            return findById(subject.getSubjectId()).isPresent();
+            stmt.executeUpdate();
+            InMemoryDataStore.getInstance().putSubjectDirect(subject);
+            DataSyncBridge.exportMySQLToDisk(conn);
+            return true;
         } catch (Exception e) {
-            throw new DatabaseException("Failed to update subject: " + subject.getSubjectCode(), e);
+            return InMemoryDataStore.getInstance().saveSubject(subject);
         }
     }
 
@@ -83,9 +84,12 @@ public class SubjectDAOImpl implements SubjectDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, subjectId);
-            return stmt.executeUpdate() > 0;
+            stmt.executeUpdate();
+            InMemoryDataStore.getInstance().deleteSubjectDirect(subjectId);
+            DataSyncBridge.exportMySQLToDisk(conn);
+            return true;
         } catch (Exception e) {
-            throw new DatabaseException("Failed to delete subject with ID: " + subjectId, e);
+            return InMemoryDataStore.getInstance().deleteSubject(subjectId);
         }
     }
 
@@ -102,9 +106,9 @@ public class SubjectDAOImpl implements SubjectDAO {
                 }
             }
         } catch (Exception e) {
-            throw new DatabaseException("Failed to query subject by ID: " + subjectId, e);
+            return InMemoryDataStore.getInstance().findSubjectById(subjectId);
         }
-        return Optional.empty();
+        return InMemoryDataStore.getInstance().findSubjectById(subjectId);
     }
 
     @Override
@@ -124,9 +128,9 @@ public class SubjectDAOImpl implements SubjectDAO {
                 }
             }
         } catch (Exception e) {
-            throw new DatabaseException("Failed to query subject by code: " + subjectCode, e);
+            return InMemoryDataStore.getInstance().findSubjectByCode(subjectCode);
         }
-        return Optional.empty();
+        return InMemoryDataStore.getInstance().findSubjectByCode(subjectCode);
     }
 
     @Override
@@ -140,10 +144,10 @@ public class SubjectDAOImpl implements SubjectDAO {
             while (rs.next()) {
                 subjects.add(mapResultSetToSubject(rs));
             }
+            return subjects;
         } catch (Exception e) {
-            throw new DatabaseException("Failed to fetch all subjects.", e);
+            return InMemoryDataStore.getInstance().getAllSubjects();
         }
-        return subjects;
     }
 
     private Subject mapResultSetToSubject(ResultSet rs) throws SQLException {

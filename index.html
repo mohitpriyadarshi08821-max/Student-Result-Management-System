@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Student Result Management System - Academic Dashboard</title>
+  
+  <!-- Modern Clean Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0F172A">
+</head>
+<body>
+
+<div class="app-container">
+  
+  <!-- Top Navigation Header -->
+  <header class="top-header">
+    <div class="header-left">
+      <button class="hamburger-btn" id="hamburger-toggle" aria-label="Toggle Navigation">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+          <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+      </div>
+      <div class="brand-titles">
+        <h1>Student Result Management System</h1>
+        <p>Institutional Examination & Academic Performance Management</p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="user-badge">
+        <span class="pulse-dot"></span>
+        System Administrator
+      </div>
+      <button class="sync-badge" onclick="exportDataJSON()" title="Export JSON to sync with Desktop App">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Export Data</span>
+      </button>
+      <button class="btn-header-logout" onclick="alert('Session active as Administrator')">Logout</button>
+    </div>
+  </header>
+
+  <!-- Module Navigation Tabs -->
+  <nav class="tabs-nav-bar">
+    <button class="nav-tab-btn active" data-tab="tab-students">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Student Management
+    </button>
+    <button class="nav-tab-btn" data-tab="tab-subjects">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Subject Management
+    </button>
+    <button class="nav-tab-btn" data-tab="tab-results-entry">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Result Entry
+    </button>
+    <button class="nav-tab-btn" data-tab="tab-marksheet">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      View Results & Marksheets
+    </button>
+  </nav>
+
+  <!-- Main Workspace -->
+  <div class="main-workspace">
+    
+    <!-- Mobile Backdrop -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- Left Sidebar -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-brand-box">
+        <div class="sidebar-badge">SMS</div>
+        <div class="sidebar-subtext">Academic Management Portal</div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="sidebar-link active" data-tab="tab-students">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </button>
+        <button class="sidebar-link" onclick="openAddStudentModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          Add Student
+        </button>
+        <button class="sidebar-link" onclick="switchTab('tab-students')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          View Students
+        </button>
+        <button class="sidebar-link" onclick="openUpdateStudentModal(4)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Update Student
+        </button>
+        <button class="sidebar-link" onclick="alert('Select a student from the table below to delete.')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Delete Student
+        </button>
+        <button class="sidebar-link" onclick="switchTab('tab-marksheet')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print Marksheet
+        </button>
+        <button class="sidebar-link" onclick="alert('Exiting application session.')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Exit
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="about-card">
+          <h4>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            About
+          </h4>
+          <p>Generate and print official student marksheets with cumulative scores and final grades.</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Work Area -->
+    <main class="content-area">
+
+      <!-- TAB 1: STUDENT MANAGEMENT -->
+      <section id="tab-students" class="tab-content active">
+        <div class="module-header">
+          <h2>Student Management Dashboard</h2>
+          <p>Overview of registered students, academic courses, and enrollment statistics</p>
+        </div>
+
+        <!-- 4 Top Stat Cards (Exact requirements: Total 7, Added 6, Updated 2, Deleted 1) -->
+        <div class="stat-cards-grid">
+          <div class="stat-card">
+            <div class="stat-icon teal">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Total Students</div>
+              <div class="stat-value" id="stat-total-students">7</div>
+              <div class="stat-subtext">Active enrollment</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Added</div>
+              <div class="stat-value" id="stat-added-students">6</div>
+              <div class="stat-subtext">Registered candidates</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Updated</div>
+              <div class="stat-value" id="stat-updated-students">2</div>
+              <div class="stat-subtext">Modified records</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon rose">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Deleted</div>
+              <div class="stat-value" id="stat-deleted-students">1</div>
+              <div class="stat-subtext">Archived records</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Panel: All Students Table -->
+        <div class="panel-card">
+          <div class="card-header-bar">
+            <div class="card-title-group">
+              <h3>All Students</h3>
+              <p>Registered university student records and overall evaluation grade</p>
+            </div>
+            <div class="card-toolbar">
+              <div class="search-input-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="student-search-input" class="search-input" placeholder="Search students (Name, Roll No, Course)...">
+              </div>
+              <button class="btn btn-primary" onclick="openAddStudentModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Student
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>Roll No</th>
+                  <th>Name</th>
+                  <th>Age</th>
+                  <th>Grade</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="students-table-body">
+                <!-- Populated via app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 4 Bottom Action Cards -->
+        <div class="action-cards-grid">
+          <div class="action-card" onclick="openAddStudentModal()">
+            <div class="action-card-header">
+              <div class="action-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+              </div>
+              <h4>Add Student</h4>
+            </div>
+            <p>Register a new student profile and semester enrollment</p>
+          </div>
+
+          <div class="action-card" onclick="renderStudents()">
+            <div class="action-card-header">
+              <div class="action-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </div>
+              <h4>View Students</h4>
+            </div>
+            <p>Refresh student directory and academic standing</p>
+          </div>
+
+          <div class="action-card" onclick="openUpdateStudentModal(4)">
+            <div class="action-card-header">
+              <div class="action-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </div>
+              <h4>Update Student</h4>
+            </div>
+            <p>Modify student profile and course enrollment</p>
+          </div>
+
+          <div class="action-card" onclick="alert('To delete a student, click the red trash icon in the table corresponding to that student.')">
+            <div class="action-card-header">
+              <div class="action-card-icon" style="background:var(--danger-bg); color:var(--danger);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </div>
+              <h4>Delete Student</h4>
+            </div>
+            <p>Remove or archive a student from the active directory</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: SUBJECT MANAGEMENT -->
+      <section id="tab-subjects" class="tab-content">
+        <div class="module-header">
+          <h2>Subject Management Dashboard</h2>
+          <p>Curriculum academic course definitions, credit hours, and pass thresholds</p>
+        </div>
+
+        <div class="stat-cards-grid">
+          <div class="stat-card">
+            <div class="stat-icon teal">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Total Subjects</div>
+              <div class="stat-value" id="stat-total-subjects">6</div>
+              <div class="stat-subtext">Curriculum modules</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Added</div>
+              <div class="stat-value" id="stat-added-subjects">6</div>
+              <div class="stat-subtext">Active catalog</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Updated</div>
+              <div class="stat-value" id="stat-updated-subjects">0</div>
+              <div class="stat-subtext">Syllabus adjustments</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon rose">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Deleted</div>
+              <div class="stat-value" id="stat-deleted-subjects">0</div>
+              <div class="stat-subtext">Deprecated courses</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="card-header-bar">
+            <div class="card-title-group">
+              <h3>Curriculum Subjects</h3>
+              <p>Registered academic courses with evaluation criteria and credits</p>
+            </div>
+            <div class="card-toolbar">
+              <div class="search-input-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="subject-search-input" class="search-input" placeholder="Search subjects...">
+              </div>
+              <button class="btn btn-primary" onclick="openAddSubjectModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Subject
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>Subject Code</th>
+                  <th>Subject Name</th>
+                  <th>Max Marks</th>
+                  <th>Pass Marks</th>
+                  <th>Credits</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="subjects-table-body">
+                <!-- Populated via app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="action-cards-grid">
+          <div class="action-card" onclick="openAddSubjectModal()">
+            <div class="action-card-header">
+              <div class="action-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+              <h4>Add Subject</h4>
+            </div>
+            <p>Define a new course code, title, and evaluation scheme</p>
+          </div>
+          <div class="action-card" onclick="renderSubjects()">
+            <div class="action-card-header">
+              <div class="action-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+              <h4>View Subjects</h4>
+            </div>
+            <p>Refresh curriculum directory and active course offerings</p>
+          </div>
+          <div class="action-card" onclick="openUpdateSubjectModal(1)">
+            <div class="action-card-header">
+              <div class="action-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+              <h4>Update Subject</h4>
+            </div>
+            <p>Adjust course credits, max marks, or title</p>
+          </div>
+          <div class="action-card" onclick="switchTab('tab-students')">
+            <div class="action-card-header">
+              <div class="action-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+              <h4>Dashboard Overview</h4>
+            </div>
+            <p>Return to main student records overview</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: RESULT ENTRY -->
+      <section id="tab-results-entry" class="tab-content">
+        <div class="module-header">
+          <h2>Examination Marks Entry</h2>
+          <p>Record, verify, and modify subject evaluation marks for individual candidates</p>
+        </div>
+
+        <div class="stat-cards-grid">
+          <div class="stat-card">
+            <div class="stat-icon teal">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Recorded Marks</div>
+              <div class="stat-value" id="stat-recorded-results">27</div>
+              <div class="stat-subtext">Total subject entries</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Passed</div>
+              <div class="stat-value" id="stat-passed-results">26</div>
+              <div class="stat-subtext">Passing scores (≥35)</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon rose">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Failed</div>
+              <div class="stat-value" id="stat-failed-results">1</div>
+              <div class="stat-subtext">Below passing limit</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Average Score</div>
+              <div class="stat-value" id="stat-avg-score">79.9%</div>
+              <div class="stat-subtext">Cohort mean</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="verify-strip">
+            <div class="verify-input-group">
+              <label for="entry-roll-input">Student Roll No:</label>
+              <input type="text" id="entry-roll-input" class="form-control" style="width: 170px;" placeholder="e.g. 2510001320" value="2510001320">
+              <button class="btn btn-dark" onclick="verifyStudentForEntry()">Verify Student</button>
+            </div>
+            <div id="entry-verified-banner" class="verified-pill">
+              ✓ Verified: <strong>Mohit Priyadarshi</strong> | B.Tech Computer Science (Sem 3)
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="entry-subject-select">Select Curriculum Subject:</label>
+              <select id="entry-subject-select" class="form-control"></select>
+            </div>
+            <div class="form-group">
+              <label for="entry-marks-input">Marks Obtained (0 - 100):</label>
+              <input type="number" id="entry-marks-input" class="form-control" placeholder="e.g. 92.5" min="0" max="100" step="0.5">
+            </div>
+            <div class="form-group" style="justify-content: flex-end;">
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-primary" onclick="saveMarksEntry()">Save Marks</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('entry-marks-input').value='';">Clear</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>Result ID</th>
+                  <th>Subject Code</th>
+                  <th>Subject Name</th>
+                  <th>Max Marks</th>
+                  <th>Marks Obtained</th>
+                  <th>Grade</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="entry-results-table-body">
+                <!-- Populated via app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="action-cards-grid">
+          <div class="action-card" onclick="switchTab('tab-marksheet')">
+            <div class="action-card-header">
+              <div class="action-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></div>
+              <h4>Print Marksheet</h4>
+            </div>
+            <p>Generate physical or PDF official marksheet</p>
+          </div>
+          <div class="action-card" onclick="verifyStudentForEntry()">
+            <div class="action-card-header">
+              <div class="action-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+              <h4>Refresh Records</h4>
+            </div>
+            <p>Re-evaluate marks and grades for current candidate</p>
+          </div>
+          <div class="action-card" onclick="switchTab('tab-students')">
+            <div class="action-card-header">
+              <div class="action-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+              <h4>Dashboard Overview</h4>
+            </div>
+            <p>Return to main student records overview</p>
+          </div>
+          <div class="action-card" onclick="switchTab('tab-subjects')">
+            <div class="action-card-header">
+              <div class="action-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+              <h4>Manage Subjects</h4>
+            </div>
+            <p>View and edit curriculum subjects and credit values</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: VIEW RESULTS & MARKSHEETS -->
+      <section id="tab-marksheet" class="tab-content">
+        <div class="module-header">
+          <h2>Student Marksheet & Result Summary</h2>
+          <p>Official statement of academic marks, cumulative performance, and evaluation standing</p>
+        </div>
+
+        <!-- 4 Top Stat Cards on Marksheet Tab (Matching Reference Screenshot) -->
+        <div class="stat-cards-grid">
+          <div class="stat-card">
+            <div class="stat-icon teal">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Total Subjects</div>
+              <div class="stat-value" id="stat-marksheet-subjects">6</div>
+              <div class="stat-subtext">Evaluated</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Total Marks</div>
+              <div class="stat-value" id="stat-marksheet-marks">533.0 / 600</div>
+              <div class="stat-subtext">Obtained / Max</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Semester SGPA</div>
+              <div class="stat-value" id="stat-marksheet-sgpa">9.33</div>
+              <div class="stat-subtext">10-Point Scale</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <div class="stat-details">
+              <div class="stat-label">Overall Status</div>
+              <div class="stat-value" id="stat-marksheet-status">PASS (A+)</div>
+              <div class="stat-subtext">Standing</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Academic Statement Card -->
+        <div class="panel-card">
+          <!-- Quick Select Chips for Students -->
+          <div class="quick-chips-wrap" id="marksheet-quick-chips">
+            <!-- Populated via app.js -->
+          </div>
+
+          <div class="verify-strip">
+            <div class="verify-input-group">
+              <label for="marksheet-roll-input">Roll Number:</label>
+              <input type="text" id="marksheet-roll-input" class="form-control" style="width: 170px;" value="2510001320" placeholder="Enter Roll No">
+              <button class="btn btn-dark" onclick="renderMarksheetView()">View Marksheet</button>
+              <button class="btn btn-primary" onclick="openPrintMarksheetModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Print Marksheet
+              </button>
+              <button class="btn btn-secondary" onclick="document.getElementById('marksheet-roll-input').value='';">Clear</button>
+            </div>
+            <div id="marksheet-verified-banner" class="verified-pill">
+              ✓ Verified: <strong>Mohit Priyadarshi</strong> | B.Tech Computer Science (Sem 3)
+            </div>
+          </div>
+
+          <div class="card-header-bar">
+            <div class="card-title-group">
+              <h3>Academic Statement of Marks</h3>
+              <p>Certified performance in university semester examinations</p>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>Subject Code</th>
+                  <th>Subject Name</th>
+                  <th>Credits</th>
+                  <th>Max Marks</th>
+                  <th>Pass Marks</th>
+                  <th>Marks Obtained</th>
+                  <th>Grade</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="marksheet-table-body">
+                <!-- Populated via app.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Lower Summary Ribbon -->
+          <div class="marksheet-summary-ribbon">
+            <div class="summary-metrics">
+              <div class="summary-metric-item">
+                <span>Total Marks:</span>
+                <strong id="ribbon-total-marks">533.0 / 600</strong>
+              </div>
+              <span>|</span>
+              <div class="summary-metric-item">
+                <span>Percentage:</span>
+                <strong id="ribbon-percentage">88.83%</strong>
+              </div>
+              <span>|</span>
+              <div class="summary-metric-item">
+                <span>SGPA:</span>
+                <strong id="ribbon-sgpa">9.33</strong>
+              </div>
+              <span>|</span>
+              <div class="summary-metric-item">
+                <span>Grade:</span>
+                <strong id="ribbon-grade">A+ (First Class with Distinction)</strong>
+              </div>
+              <span>|</span>
+              <div class="summary-metric-item">
+                <span>Date:</span>
+                <span id="ribbon-date">20-Nov-2026</span>
+              </div>
+            </div>
+            <div>
+              <span id="ribbon-status-tag" class="summary-status-tag pass">STATUS: PASS</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Bottom Action Cards -->
+        <div class="action-cards-grid">
+          <div class="action-card" onclick="openPrintMarksheetModal()">
+            <div class="action-card-header">
+              <div class="action-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></div>
+              <h4>Print Marksheet</h4>
+            </div>
+            <p>Generate physical or PDF official marksheet</p>
+          </div>
+          <div class="action-card" onclick="switchTab('tab-results-entry')">
+            <div class="action-card-header">
+              <div class="action-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+              <h4>Enter Marks</h4>
+            </div>
+            <p>Record new subject marks for student examinations</p>
+          </div>
+          <div class="action-card" onclick="openUpdateStudentModal(4)">
+            <div class="action-card-header">
+              <div class="action-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div>
+              <h4>Update Student</h4>
+            </div>
+            <p>Modify student profile and course enrollment</p>
+          </div>
+          <div class="action-card" onclick="switchTab('tab-students')">
+            <div class="action-card-header">
+              <div class="action-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+              <h4>Dashboard Overview</h4>
+            </div>
+            <p>Return to main student records overview</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- Add / Edit Student Modal -->
+<div class="modal-overlay" id="student-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="student-modal-title">Add New Student</h3>
+      <button class="modal-close-btn" onclick="closeModals()">✕</button>
+    </div>
+    <form id="student-form" onsubmit="event.preventDefault(); saveStudentForm();">
+      <input type="hidden" id="student-id-field">
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label for="modal-roll-input">Roll Number:</label>
+          <input type="text" id="modal-roll-input" class="form-control" required placeholder="e.g. 2510001350">
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+          <div class="form-group">
+            <label for="modal-fname-input">First Name:</label>
+            <input type="text" id="modal-fname-input" class="form-control" required placeholder="e.g. Rahul">
+          </div>
+          <div class="form-group">
+            <label for="modal-lname-input">Last Name:</label>
+            <input type="text" id="modal-lname-input" class="form-control" required placeholder="e.g. Sharma">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label for="modal-email-input">Email Address:</label>
+          <input type="email" id="modal-email-input" class="form-control" placeholder="e.g. rahul.sharma@example.com">
+        </div>
+        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px; margin-bottom:12px;">
+          <div class="form-group">
+            <label for="modal-course-input">Academic Program:</label>
+            <input type="text" id="modal-course-input" class="form-control" value="B.Tech Computer Science">
+          </div>
+          <div class="form-group">
+            <label for="modal-semester-input">Semester:</label>
+            <input type="number" id="modal-semester-input" class="form-control" min="1" max="8" value="3">
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label for="modal-gender-input">Gender:</label>
+            <select id="modal-gender-input" class="form-control">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="modal-age-input">Age:</label>
+            <input type="number" id="modal-age-input" class="form-control" min="16" max="35" value="19">
+          </div>
+          <div class="form-group">
+            <label for="modal-grade-input">Grade:</label>
+            <input type="text" id="modal-grade-input" class="form-control" value="B">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModals()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Student</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add / Edit Subject Modal -->
+<div class="modal-overlay" id="subject-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="subject-modal-title">Add Subject</h3>
+      <button class="modal-close-btn" onclick="closeModals()">✕</button>
+    </div>
+    <form id="subject-form" onsubmit="event.preventDefault(); saveSubjectForm();">
+      <input type="hidden" id="subject-id-field">
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label for="modal-subcode-input">Subject Code:</label>
+          <input type="text" id="modal-subcode-input" class="form-control" required placeholder="e.g. CS108">
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label for="modal-subname-input">Subject Title:</label>
+          <input type="text" id="modal-subname-input" class="form-control" required placeholder="e.g. Cloud Computing">
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label for="modal-maxmarks-input">Max Marks:</label>
+            <input type="number" id="modal-maxmarks-input" class="form-control" value="100">
+          </div>
+          <div class="form-group">
+            <label for="modal-passmarks-input">Pass Marks:</label>
+            <input type="number" id="modal-passmarks-input" class="form-control" value="35">
+          </div>
+          <div class="form-group">
+            <label for="modal-credits-input">Credits:</label>
+            <input type="number" id="modal-credits-input" class="form-control" value="4">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModals()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Subject</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Official Marksheet Print & Preview Modal -->
+<div class="modal-overlay" id="print-marksheet-modal">
+  <div class="modal-card modal-lg">
+    <div class="modal-header">
+      <h3>Official Examination Marksheet</h3>
+      <button class="modal-close-btn" onclick="closeModals()">✕</button>
+    </div>
+    <div class="modal-body" id="official-marksheet-container">
+      <!-- Populated via openPrintMarksheetModal in app.js -->
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closeModals()">Close</button>
+      <button type="button" class="btn btn-dark" onclick="window.print()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print / Save PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

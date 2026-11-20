@@ -30,10 +30,13 @@ public class RenderStudentPanel {
         StudentDAO mockStudentDAO = new StudentDAO() {
             private final List<Student> list = new ArrayList<>();
             {
-                list.add(new Student(1, "2510001320", "Mohit", "Priyadarshi", "mohit.priyadarshi@example.com", "B.Tech Computer Science", 4, "Male", LocalDate.now().minusYears(19)));
-                list.add(new Student(2, "2510001331", "Moulik", "Tiwari", "moulik.tiwari@example.com", "BCA", 2, "Male", LocalDate.now().minusYears(19)));
-                list.add(new Student(3, "2510001319", "Adarsh", "Kumar", "adarsh.kumar@example.com", "B.Tech IT", 4, "Male", LocalDate.now().minusYears(20)));
-                list.add(new Student(4, "2510001212", "Akshay", "Bharadwaj", "akshay.bharadwaj@example.com", "MCA", 2, "Male", LocalDate.now().minusYears(19)));
+                list.add(new Student(1, "2510001283", "Utkarsh", "Mishra", "utkarsh.mishra@example.com", "B.Tech Computer Science", 4, "Male", LocalDate.now().minusYears(19)));
+                list.add(new Student(2, "2510001205", "Abhishek", "Kumar", "abhishek.kumar@example.com", "B.Tech Information Technology", 4, "Male", LocalDate.now().minusYears(19)));
+                list.add(new Student(3, "2510001348", "Aditya", "Saini", "aditya.saini@example.com", "BCA", 2, "Male", LocalDate.now().minusYears(18)));
+                list.add(new Student(4, "2510001320", "Mohit", "Priyadarshi", "mohit.priyadarshi@example.com", "B.Tech Computer Science", 4, "Male", LocalDate.now().minusYears(19)));
+                list.add(new Student(5, "2510001331", "Moulik", "Tiwari", "moulik.tiwari@example.com", "BCA", 2, "Male", LocalDate.now().minusYears(19)));
+                list.add(new Student(6, "2510001319", "Adarsh", "Kumar", "adarsh.kumar@example.com", "B.Tech IT", 4, "Male", LocalDate.now().minusYears(20)));
+                list.add(new Student(7, "2510001212", "Akshay", "Bharadwaj", "akshay.bharadwaj@example.com", "MCA", 2, "Male", LocalDate.now().minusYears(19)));
             }
 
             @Override public boolean insert(Student student) { return true; }

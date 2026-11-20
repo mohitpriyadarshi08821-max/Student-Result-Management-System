@@ -1,6 +1,7 @@
 package result.dao;
 
 import result.database.DatabaseConnection;
+import result.database.DataSyncBridge;
 import result.exception.DatabaseException;
 import result.model.Result;
 import result.model.Subject;
@@ -15,7 +16,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * JDBC implementation of the ResultDAO interface.
+ * JDBC implementation of the ResultDAO interface with transparent in-memory
+ * fallback synchronization for offline and WebAssembly execution.
  */
 public class ResultDAOImpl implements ResultDAO {
 
@@ -43,12 +45,12 @@ public class ResultDAOImpl implements ResultDAO {
                         result.setResultId(keys.getInt(1));
                     }
                 }
-                return true;
             }
-            // In MySQL, ON DUPLICATE KEY UPDATE with unchanged values returns 0 (success)
-            return affected >= 0;
+            InMemoryDataStore.getInstance().saveResultDirect(result);
+            DataSyncBridge.exportMySQLToDisk(conn);
+            return true;
         } catch (Exception e) {
-            throw new DatabaseException("Failed to insert student result.", e);
+            return InMemoryDataStore.getInstance().saveOrUpdateResult(result);
         }
     }
 
@@ -68,13 +70,12 @@ public class ResultDAOImpl implements ResultDAO {
             stmt.setInt(4, result.getSubjectId());
             stmt.setInt(5, result.getResultId());
 
-            int affected = stmt.executeUpdate();
-            if (affected > 0) {
-                return true;
-            }
-            return findByStudentAndSubject(result.getStudentId(), result.getSubjectId()).isPresent();
+            stmt.executeUpdate();
+            InMemoryDataStore.getInstance().saveResultDirect(result);
+            DataSyncBridge.exportMySQLToDisk(conn);
+            return true;
         } catch (Exception e) {
-            throw new DatabaseException("Failed to update result for student ID: " + result.getStudentId(), e);
+            return InMemoryDataStore.getInstance().saveOrUpdateResult(result);
         }
     }
 
@@ -85,9 +86,12 @@ public class ResultDAOImpl implements ResultDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, resultId);
-            return stmt.executeUpdate() > 0;
+            stmt.executeUpdate();
+            InMemoryDataStore.getInstance().deleteResultDirect(resultId);
+            DataSyncBridge.exportMySQLToDisk(conn);
+            return true;
         } catch (Exception e) {
-            throw new DatabaseException("Failed to delete result with ID: " + resultId, e);
+            return InMemoryDataStore.getInstance().deleteResult(resultId);
         }
     }
 
@@ -98,9 +102,17 @@ public class ResultDAOImpl implements ResultDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, studentId);
-            return stmt.executeUpdate() > 0;
+            stmt.executeUpdate();
+            for (Result r : InMemoryDataStore.getInstance().getResultsByStudentId(studentId)) {
+                InMemoryDataStore.getInstance().deleteResultDirect(r.getResultId());
+            }
+            DataSyncBridge.exportMySQLToDisk(conn);
+            return true;
         } catch (Exception e) {
-            throw new DatabaseException("Failed to delete results for student ID: " + studentId, e);
+            for (Result r : InMemoryDataStore.getInstance().getResultsByStudentId(studentId)) {
+                InMemoryDataStore.getInstance().deleteResult(r.getResultId());
+            }
+            return true;
         }
     }
 
@@ -120,9 +132,9 @@ public class ResultDAOImpl implements ResultDAO {
                 }
             }
         } catch (Exception e) {
-            throw new DatabaseException("Failed to query result by ID: " + resultId, e);
+            return InMemoryDataStore.getInstance().findResultById(resultId);
         }
-        return Optional.empty();
+        return InMemoryDataStore.getInstance().findResultById(resultId);
     }
 
     @Override
@@ -143,9 +155,9 @@ public class ResultDAOImpl implements ResultDAO {
                 }
             }
         } catch (Exception e) {
-            throw new DatabaseException("Failed to query result by student and subject.", e);
+            return InMemoryDataStore.getInstance().findResultByStudentAndSubject(studentId, subjectId);
         }
-        return Optional.empty();
+        return InMemoryDataStore.getInstance().findResultByStudentAndSubject(studentId, subjectId);
     }
 
     @Override
@@ -165,10 +177,10 @@ public class ResultDAOImpl implements ResultDAO {
                     results.add(mapResultSetToResultWithSubject(rs));
                 }
             }
+            return results;
         } catch (Exception e) {
-            throw new DatabaseException("Failed to query results for student ID: " + studentId, e);
+            return InMemoryDataStore.getInstance().getResultsByStudentId(studentId);
         }
-        return results;
     }
 
     @Override
@@ -186,10 +198,10 @@ public class ResultDAOImpl implements ResultDAO {
             while (rs.next()) {
                 results.add(mapResultSetToResultWithSubject(rs));
             }
+            return results;
         } catch (Exception e) {
-            throw new DatabaseException("Failed to fetch all results.", e);
+            return InMemoryDataStore.getInstance().getAllResults();
         }
-        return results;
     }
 
     private Result mapResultSetToResultWithSubject(ResultSet rs) throws SQLException {

@@ -27,12 +27,14 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
@@ -73,7 +75,10 @@ public class LoginFrame extends JFrame {
     private void initComponents() {
         setTitle(UIConstants.APP_TITLE + " - Login");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1024, 680);
+
+        // Fill 100% of the PC monitor / browser canvas edge-to-edge
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        setBounds(0, 0, screenSize.width, screenSize.height);
         setMinimumSize(new Dimension(800, 560));
         setResizable(true);
 
@@ -82,12 +87,9 @@ public class LoginFrame extends JFrame {
         } catch (Throwable ignored) {
         }
 
-        // In CheerpJ WebAssembly, keep natural window bounds inside canvas; maximize on native desktop
-        if (!MainApplication.isBrowserEnvironment()) {
-            try {
-                setExtendedState(JFrame.MAXIMIZED_BOTH);
-            } catch (Throwable ignored) {
-            }
+        try {
+            setExtendedState(JFrame.MAXIMIZED_BOTH);
+        } catch (Throwable ignored) {
         }
 
         // Root full-screen background container
@@ -129,9 +131,9 @@ public class LoginFrame extends JFrame {
     private JPanel createGlassLoginCard() {
         GlassPanel card = new GlassPanel();
         card.setLayout(new GridBagLayout());
-        card.setPreferredSize(new Dimension(400, 560));
-        card.setMinimumSize(new Dimension(360, 520));
-        card.setBorder(new EmptyBorder(32, 32, 24, 32));
+        card.setPreferredSize(new Dimension(420, 580));
+        card.setMinimumSize(new Dimension(380, 530));
+        card.setBorder(new EmptyBorder(34, 34, 26, 34));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -366,23 +368,20 @@ public class LoginFrame extends JFrame {
                         DashboardFrame dashboard = new DashboardFrame(authService);
                         System.out.println("[SRMS-DIAGNOSTIC] STAGE:DASHBOARD_INSTANTIATED");
 
-                        // Seamless panel-switching: Replace login card with dashboard in active window
-                        setContentPane(dashboard.getContentPane());
-                        setTitle(dashboard.getTitle());
-                        setSize(1024, 680);
+                        // Seamless panel-switching: Replace login card with dashboard across full PC screen
+                        getContentPane().removeAll();
+
+                        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                        setBounds(0, 0, screenSize.width, screenSize.height);
                         try {
-                            setLocationRelativeTo(null);
+                            setExtendedState(JFrame.MAXIMIZED_BOTH);
                         } catch (Throwable ignored) {
                         }
+
+                        setContentPane(dashboard.getContentPane());
+                        setTitle(dashboard.getTitle());
                         revalidate();
                         repaint();
-
-                        if (!MainApplication.isBrowserEnvironment()) {
-                            try {
-                                setExtendedState(JFrame.MAXIMIZED_BOTH);
-                            } catch (Throwable ignored) {
-                            }
-                        }
 
                         System.out.println("[SRMS-DIAGNOSTIC] STAGE:DASHBOARD_RENDERED");
                         System.out.println("[INFO] Dashboard loaded and interactive.");
@@ -442,6 +441,13 @@ public class LoginFrame extends JFrame {
 
     public void resetToLoginView() {
         setTitle(UIConstants.APP_TITLE + " - Login");
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        setBounds(0, 0, screenSize.width, screenSize.height);
+        try {
+            setExtendedState(JFrame.MAXIMIZED_BOTH);
+        } catch (Throwable ignored) {
+        }
+        getContentPane().removeAll();
         CampusHallwayBackdropPanel mainContainer = new CampusHallwayBackdropPanel(new BorderLayout());
         mainContainer.add(createCenterCardWrapper(), BorderLayout.CENTER);
         setContentPane(mainContainer);
@@ -453,11 +459,6 @@ public class LoginFrame extends JFrame {
             getRootPane().setDefaultButton(loginButton);
         }
         setStatus(" ", Color.BLACK);
-        setSize(1024, 680);
-        try {
-            setLocationRelativeTo(null);
-        } catch (Throwable ignored) {
-        }
         revalidate();
         repaint();
     }
@@ -576,8 +577,17 @@ public class LoginFrame extends JFrame {
 
                 g2.drawImage(bgImage, drawX, drawY, drawW, drawH, null);
 
-                // Subtle moody cinematic vignette overlay to enhance text readability
-                g2.setColor(new Color(0, 0, 0, 45));
+                // Overall atmospheric tint
+                g2.setColor(new Color(0, 0, 0, 35));
+                g2.fillRect(0, 0, w, h);
+
+                // High-contrast left-focused vignette gradient behind the login card
+                // Deepens floor tiles and background pillars behind card corners so vertices pop out
+                GradientPaint leftVignette = new GradientPaint(
+                        0, 0, new Color(15, 23, 42, 195), // Dark navy #0F172A at 76% opacity
+                        (int) (w * 0.54), 0, new Color(0, 0, 0, 20)
+                );
+                g2.setPaint(leftVignette);
                 g2.fillRect(0, 0, w, h);
             } else {
                 g2.setPaint(new java.awt.GradientPaint(0, 0, new Color(15, 23, 42), w, h, new Color(30, 41, 59)));
@@ -603,19 +613,37 @@ public class LoginFrame extends JFrame {
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
             int w = getWidth();
             int h = getHeight();
+            int pad = 6;
+            int cardX = pad;
+            int cardY = pad;
+            int cardW = w - (pad * 2);
+            int cardH = h - (pad * 2);
             int r = 18; // Rounded corner radius
 
-            // Frosted high-contrast translucent white surface
-            g2.setColor(new Color(255, 255, 255, 225));
-            g2.fillRoundRect(0, 0, w - 1, h - 1, r, r);
+            // 1. Ambient drop shadow around all 4 sides and vertices to lift card off background
+            for (int i = pad; i >= 1; i--) {
+                int shadowAlpha = Math.max(6, 26 - i * 3);
+                g2.setColor(new Color(0, 0, 0, shadowAlpha));
+                g2.fillRoundRect(cardX - i, cardY - i + 2, cardW + (i * 2), cardH + (i * 2), r + (i * 2), r + (i * 2));
+            }
 
-            // Prominent dark defined border stroke
-            g2.setColor(new Color(15, 23, 42, 230)); // Dark obsidian/charcoal
-            g2.setStroke(new BasicStroke(2.0f));
-            g2.drawRoundRect(1, 1, w - 3, h - 3, r, r);
+            // 2. High-opacity solid card body (98% opaque crisp white)
+            g2.setColor(new Color(255, 255, 255, 250));
+            g2.fillRoundRect(cardX, cardY, cardW, cardH, r, r);
+
+            // 3. Razor-sharp solid outer border defining every vertex and edge
+            g2.setColor(new Color(15, 23, 42, 255)); // 100% solid dark charcoal #0F172A
+            g2.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            g2.drawRoundRect(cardX, cardY, cardW - 1, cardH - 1, r, r);
+
+            // 4. Subtle inner highlight border for crisp edge definition
+            g2.setColor(new Color(255, 255, 255, 160));
+            g2.setStroke(new BasicStroke(1.0f));
+            g2.drawRoundRect(cardX + 2, cardY + 2, cardW - 5, cardH - 5, r - 2, r - 2);
 
             g2.dispose();
             super.paintComponent(g);

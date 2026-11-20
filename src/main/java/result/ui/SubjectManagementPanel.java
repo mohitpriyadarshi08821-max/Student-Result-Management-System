@@ -70,8 +70,8 @@ public class SubjectManagementPanel extends JPanel {
     private DashboardFrame parentDashboard;
 
     // Stat Tracking
-    private int totalSubjectsCount = 5;
-    private int addedSubjectsCount = 5;
+    private int totalSubjectsCount = 6;
+    private int addedSubjectsCount = 6;
     private int updatedSubjectsCount = 2;
     private int deletedSubjectsCount = 1;
 
@@ -484,7 +484,7 @@ public class SubjectManagementPanel extends JPanel {
         });
 
         JScrollPane scrollPane = new JScrollPane(subjectTable);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        ModernScrollBarUI.apply(scrollPane);
         scrollPane.getViewport().setBackground(Color.WHITE);
         card.add(scrollPane, BorderLayout.CENTER);
 
@@ -575,11 +575,12 @@ public class SubjectManagementPanel extends JPanel {
 
     private List<Subject> createDesignSeedSubjects() {
         List<Subject> list = new ArrayList<>();
-        list.add(new Subject(1, "CS101", "Java Programming", 100, 35));
-        list.add(new Subject(2, "CS102", "Database Management Systems", 100, 35));
-        list.add(new Subject(3, "CS103", "Data Structures & Algorithms", 100, 35));
-        list.add(new Subject(4, "CS104", "Computer Networks", 100, 35));
-        list.add(new Subject(5, "CS105", "Operating Systems", 100, 35));
+        list.add(new Subject(1, "CS107", "Computer Architecture And Organization", 100, 35, 4));
+        list.add(new Subject(2, "CS102", "Database Management Systems", 100, 35, 4));
+        list.add(new Subject(3, "CS103", "Data Structures & Algorithms", 100, 35, 4));
+        list.add(new Subject(4, "CS104", "Computer Networks", 100, 35, 4));
+        list.add(new Subject(5, "CS105", "Operating Systems", 100, 35, 4));
+        list.add(new Subject(6, "CS106", "Artificial Intelligence", 100, 35, 4));
         return list;
     }
 

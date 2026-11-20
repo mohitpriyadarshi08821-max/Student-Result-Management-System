@@ -8,6 +8,7 @@ import result.dao.SubjectDAO;
 import result.dao.SubjectDAOImpl;
 import result.dao.UserDAOImpl;
 import result.database.DatabaseInitializer;
+import result.database.DataSyncBridge;
 import result.model.User;
 import result.service.AuthService;
 import result.service.ResultService;
@@ -35,6 +36,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -43,7 +45,7 @@ import java.awt.event.MouseEvent;
  * logout option, and tabbed panels for Student Management, Subject Management,
  * Marks Entry, and Result Viewing.
  */
-@SuppressWarnings({"serial", "this-escape"})
+@SuppressWarnings({ "serial", "this-escape" })
 public class DashboardFrame extends JFrame {
 
     private static final long serialVersionUID = 1L;
@@ -68,8 +70,7 @@ public class DashboardFrame extends JFrame {
                 authService,
                 new StudentService(new StudentDAOImpl()),
                 new SubjectService(new SubjectDAOImpl()),
-                new ResultService(new ResultDAOImpl(), new StudentDAOImpl(), new SubjectDAOImpl())
-        );
+                new ResultService(new ResultDAOImpl(), new StudentDAOImpl(), new SubjectDAOImpl()));
     }
 
     public DashboardFrame(AuthService authService, StudentService studentService, ResultService resultService) {
@@ -77,17 +78,18 @@ public class DashboardFrame extends JFrame {
                 authService,
                 studentService,
                 new SubjectService(new SubjectDAOImpl()),
-                resultService
-        );
+                resultService);
     }
 
-    public DashboardFrame(AuthService authService, StudentService studentService, SubjectService subjectService, ResultService resultService) {
+    public DashboardFrame(AuthService authService, StudentService studentService, SubjectService subjectService,
+            ResultService resultService) {
         this.authService = authService;
         this.studentService = studentService;
         this.subjectService = subjectService;
         this.resultService = resultService;
 
-        // Ensure database tables and initial curriculum seed data are present on desktop in background
+        // Ensure database tables and initial curriculum seed data are present on
+        // desktop in background
         try {
             if (!MainApplication.isBrowserEnvironment() && !DatabaseInitializer.isInitialized()) {
                 new Thread(() -> {
@@ -106,22 +108,24 @@ public class DashboardFrame extends JFrame {
     private void initComponents() {
         setTitle(UIConstants.APP_TITLE + " - Administration Dashboard");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1024, 680);
+
+        // Fill 100% of the PC monitor / browser canvas edge-to-edge
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        setBounds(0, 0, screenSize.width, screenSize.height);
         setMinimumSize(new Dimension(800, 560));
         setResizable(true);
         try {
             setLocationRelativeTo(null);
         } catch (Throwable ignored) {
         }
-        if (!MainApplication.isBrowserEnvironment()) {
-            try {
-                setExtendedState(JFrame.MAXIMIZED_BOTH);
-            } catch (Throwable ignored) {
-            }
+        try {
+            setExtendedState(JFrame.MAXIMIZED_BOTH);
+        } catch (Throwable ignored) {
         }
 
         JPanel mainContainer = new JPanel(new BorderLayout());
         mainContainer.setBackground(UIConstants.BACKGROUND_COLOR);
+        mainContainer.setOpaque(true);
 
         // Instantiate the four main panels
         studentManagementPanel = new StudentManagementPanel(studentService, this);
@@ -140,7 +144,8 @@ public class DashboardFrame extends JFrame {
         tabbedPane.setBackground(Color.WHITE);
         tabbedPane.setOpaque(true);
 
-        // Flat SaaS tabbed pane UI with dark slate text and Dark Teal / Emerald underline
+        // Flat SaaS tabbed pane UI with dark slate text and Dark Teal / Emerald
+        // underline
         tabbedPane.setUI(new javax.swing.plaf.basic.BasicTabbedPaneUI() {
             @Override
             protected void installDefaults() {
@@ -153,51 +158,72 @@ public class DashboardFrame extends JFrame {
             }
 
             @Override
-            protected void paintTabBorder(Graphics g, int tabPlacement, int tabIndex, int x, int y, int w, int h, boolean isSelected) {
+            protected void paintTabBorder(Graphics g, int tabPlacement, int tabIndex, int x, int y, int w, int h,
+                    boolean isSelected) {
                 if (isSelected) {
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g2.setColor(new Color(13, 148, 136)); // Dark Teal #0D9488
-                    g2.fillRect(x + 12, y + h - 3, w - 24, 3);
+                    int barHeight = 5; // Prominent thick active tab underline indicator
+                    g2.fillRoundRect(x + 6, y + h - barHeight, w - 12, barHeight, 3, 3);
                     g2.dispose();
                 }
             }
 
             @Override
-            protected void paintTabBackground(Graphics g, int tabPlacement, int tabIndex, int x, int y, int w, int h, boolean isSelected) {
+            protected void paintTabBackground(Graphics g, int tabPlacement, int tabIndex, int x, int y, int w, int h,
+                    boolean isSelected) {
                 g.setColor(Color.WHITE);
                 g.fillRect(x, y, w, h);
             }
 
             @Override
-            protected void paintContentBorderTopEdge(Graphics g, int tabPlacement, int selectedIndex, int x, int y, int w, int h) {
+            protected void paintContentBorderTopEdge(Graphics g, int tabPlacement, int selectedIndex, int x, int y,
+                    int w, int h) {
                 Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(new Color(226, 232, 240)); // #E2E8F0 bottom divider line
                 g2.drawLine(x, y, x + w, y);
+
+                // Reinforce the active tab underline at the content boundary so it is thick,
+                // crisp, and bold
+                if (selectedIndex >= 0 && selectedIndex < tabPane.getTabCount()) {
+                    java.awt.Rectangle rect = getTabBounds(tabPane, selectedIndex);
+                    if (rect != null) {
+                        g2.setColor(new Color(13, 148, 136)); // Dark Teal #0D9488
+                        int barHeight = 5;
+                        g2.fillRoundRect(rect.x + 6, y - barHeight + 1, rect.width - 12, barHeight, 3, 3);
+                    }
+                }
                 g2.dispose();
             }
 
             @Override
-            protected void paintContentBorderBottomEdge(Graphics g, int tabPlacement, int selectedIndex, int x, int y, int w, int h) {
+            protected void paintContentBorderBottomEdge(Graphics g, int tabPlacement, int selectedIndex, int x, int y,
+                    int w, int h) {
             }
 
             @Override
-            protected void paintContentBorderLeftEdge(Graphics g, int tabPlacement, int selectedIndex, int x, int y, int w, int h) {
+            protected void paintContentBorderLeftEdge(Graphics g, int tabPlacement, int selectedIndex, int x, int y,
+                    int w, int h) {
             }
 
             @Override
-            protected void paintContentBorderRightEdge(Graphics g, int tabPlacement, int selectedIndex, int x, int y, int w, int h) {
+            protected void paintContentBorderRightEdge(Graphics g, int tabPlacement, int selectedIndex, int x, int y,
+                    int w, int h) {
             }
 
             @Override
             protected void paintText(Graphics g, int tabPlacement, Font font, java.awt.FontMetrics metrics,
-                                     int tabIndex, String title, java.awt.Rectangle textRect, boolean isSelected) {
+                    int tabIndex, String title, java.awt.Rectangle textRect, boolean isSelected) {
                 Graphics2D g2 = (Graphics2D) g.create();
-                java.util.Map<?, ?> desktopHints = (java.util.Map<?, ?>) java.awt.Toolkit.getDefaultToolkit().getDesktopProperty("awt.font.desktophints");
+                java.util.Map<?, ?> desktopHints = (java.util.Map<?, ?>) java.awt.Toolkit.getDefaultToolkit()
+                        .getDesktopProperty("awt.font.desktophints");
                 if (desktopHints != null) {
                     g2.addRenderingHints(desktopHints);
                 } else {
-                    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+                    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                            RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
                 }
                 g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
 
@@ -212,9 +238,11 @@ public class DashboardFrame extends JFrame {
                 int ty = textRect.y + ((textRect.height - fm.getHeight()) / 2) + fm.getAscent();
                 g2.drawString(title, textRect.x, ty);
                 if (isSelected) {
-                    // Micro-reinforce for subpixel stroke completeness on bold diagonal stems (e.g. 'y')
+                    // Micro-reinforce for subpixel stroke completeness on bold diagonal stems (e.g.
+                    // 'y')
                     Graphics2D gReinforce = (Graphics2D) g2.create();
-                    gReinforce.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.45f));
+                    gReinforce
+                            .setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.45f));
                     gReinforce.drawString(title, textRect.x + 0.35f, (float) ty);
                     gReinforce.dispose();
                 }
@@ -223,7 +251,7 @@ public class DashboardFrame extends JFrame {
 
             @Override
             protected void paintFocusIndicator(Graphics g, int tabPlacement, java.awt.Rectangle[] rects,
-                                               int tabIndex, java.awt.Rectangle iconRect, java.awt.Rectangle textRect, boolean isSelected) {
+                    int tabIndex, java.awt.Rectangle iconRect, java.awt.Rectangle textRect, boolean isSelected) {
                 // No dashed focus border
             }
 
@@ -245,18 +273,32 @@ public class DashboardFrame extends JFrame {
 
         // Auto-refresh when tabs are switched
         tabbedPane.addChangeListener(e -> {
-            int selectedIndex = tabbedPane.getSelectedIndex();
-            if (selectedIndex == 0) {
-                studentManagementPanel.loadStudentData();
-            } else if (selectedIndex == 1) {
-                subjectManagementPanel.loadSubjectData();
-            } else if (selectedIndex == 2) {
-                resultEntryPanel.loadSubjects();
-            }
+            try {
+                DataSyncBridge.pullLatestData();
+            } catch (Throwable ignored) {}
+            refreshActivePanel();
         });
+
+        // Register background sync callback to auto-refresh active panel whenever data updates
+        DataSyncBridge.addSyncListener(() -> SwingUtilities.invokeLater(this::refreshActivePanel));
 
         mainContainer.add(tabbedPane, BorderLayout.CENTER);
         setContentPane(mainContainer);
+    }
+
+    public void refreshActivePanel() {
+        if (tabbedPane == null) return;
+        int selectedIndex = tabbedPane.getSelectedIndex();
+        if (selectedIndex == 0 && studentManagementPanel != null) {
+            studentManagementPanel.loadStudentData();
+        } else if (selectedIndex == 1 && subjectManagementPanel != null) {
+            subjectManagementPanel.loadSubjectData();
+        } else if (selectedIndex == 2 && resultEntryPanel != null) {
+            resultEntryPanel.loadSubjects();
+            resultEntryPanel.refreshCurrentResults();
+        } else if (selectedIndex == 3 && resultViewPanel != null) {
+            resultViewPanel.refreshCurrentView();
+        }
     }
 
     private JPanel createHeaderPanel() {
@@ -293,7 +335,8 @@ public class DashboardFrame extends JFrame {
         userBadge.setForeground(Color.WHITE);
         userBadge.setBorder(new EmptyBorder(6, 16, 6, 16));
 
-        RoundedPanel userPill = new RoundedPanel(new BorderLayout(), 8, new Color(30, 41, 59), new Color(51, 65, 85), 1);
+        RoundedPanel userPill = new RoundedPanel(new BorderLayout(), 8, new Color(30, 41, 59), new Color(51, 65, 85),
+                1);
         userPill.add(userBadge, BorderLayout.CENTER);
 
         JButton logoutButton = new JButton("Logout") {
@@ -332,8 +375,7 @@ public class DashboardFrame extends JFrame {
                 "Are you sure you want to log out of the Student Result Management System?",
                 "Confirm Logout",
                 JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-        );
+                JOptionPane.QUESTION_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
             authService.logout();

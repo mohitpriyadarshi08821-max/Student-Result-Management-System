@@ -1,5 +1,6 @@
 package result.ui;
 
+import result.dao.InMemoryDataStore;
 import result.dao.ResultDAOImpl;
 import result.dao.StudentDAOImpl;
 import result.dao.SubjectDAOImpl;
@@ -508,7 +509,7 @@ public class ResultEntryPanel extends JPanel {
         });
 
         JScrollPane scrollPane = new JScrollPane(studentResultsTable);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        ModernScrollBarUI.apply(scrollPane);
         scrollPane.getViewport().setBackground(Color.WHITE);
         card.add(scrollPane, BorderLayout.CENTER);
 
@@ -591,6 +592,7 @@ public class ResultEntryPanel extends JPanel {
                 new LineBorder(new Color(203, 213, 225), 1, true),
                 new EmptyBorder(2, 6, 2, 6)
         ));
+        marksField.addActionListener(e -> handleSubmitMarks());
 
         submitMarksButton = new RoundedButton("Save Marks", new Color(13, 148, 136), new Color(15, 118, 110), new Color(17, 94, 89), Color.WHITE, new Color(15, 118, 110), 6);
         submitMarksButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -747,6 +749,14 @@ public class ResultEntryPanel extends JPanel {
         this.parentDashboard = parentDashboard;
     }
 
+    public void refreshCurrentResults() {
+        if (currentStudent != null) {
+            loadCurrentStudentResults();
+        } else if (studentRollField != null && !studentRollField.getText().trim().isEmpty()) {
+            handleVerifyStudent();
+        }
+    }
+
     public void setStudentRoll(String rollNumber) {
         if (rollNumber != null) {
             studentRollField.setText(rollNumber.trim());
@@ -788,16 +798,7 @@ public class ResultEntryPanel extends JPanel {
     }
 
     private Student findSeedStudentByRoll(String roll) {
-        if ("2510001320".equals(roll)) {
-            return new Student(1, "2510001320", "Mohit", "Priyadarshi", "mohit@example.com", "B.Tech Computer Science", 4, "Male", LocalDate.now().minusYears(19));
-        } else if ("2510001331".equals(roll)) {
-            return new Student(2, "2510001331", "Moulik", "Tiwari", "moulik@example.com", "BCA", 2, "Male", LocalDate.now().minusYears(19));
-        } else if ("2510001319".equals(roll)) {
-            return new Student(3, "2510001319", "Adarsh", "Kumar", "adarsh@example.com", "B.Tech IT", 4, "Male", LocalDate.now().minusYears(20));
-        } else if ("2510001212".equals(roll)) {
-            return new Student(4, "2510001212", "Akshay", "Bharadwaj", "akshay@example.com", "MCA", 2, "Male", LocalDate.now().minusYears(19));
-        }
-        return null;
+        return InMemoryDataStore.getInstance().findStudentByRoll(roll).orElse(null);
     }
 
     public void handleSubmitMarks() {
@@ -883,6 +884,13 @@ public class ResultEntryPanel extends JPanel {
         String grade = calculateGrade(marks, max);
         String status = marks >= pass ? "PASS" : "FAIL";
 
+        // Save into central in-memory store so marksheet view sees it immediately!
+        if (currentStudent != null) {
+            Result res = new Result(0, currentStudent.getStudentId(), subject.getSubjectId(), marks, grade);
+            res.setSubject(subject);
+            InMemoryDataStore.getInstance().saveOrUpdateResult(res);
+        }
+
         boolean updated = false;
         for (int i = 0; i < allCurrentResults.size(); i++) {
             Object[] row = allCurrentResults.get(i);
@@ -910,13 +918,10 @@ public class ResultEntryPanel extends JPanel {
     }
 
     private String calculateGrade(double marks, int max) {
-        double pct = (marks / max) * 100.0;
-        if (pct >= 90) return "A+";
-        if (pct >= 85) return "A";
-        if (pct >= 80) return "A-";
-        if (pct >= 70) return "B";
-        if (pct >= 60) return "C";
-        return "F";
+        if (resultService != null) {
+            return resultService.calculateGrade(marks, max);
+        }
+        return InMemoryDataStore.calculateGrade(marks, max);
     }
 
     public void handleDeleteResult() {
@@ -944,6 +949,7 @@ public class ResultEntryPanel extends JPanel {
                     loadCurrentStudentResults();
                 }
             } catch (DatabaseException ex) {
+                InMemoryDataStore.getInstance().deleteResult(resultId);
                 // Remove from table and list locally in offline mode
                 if (row >= 0 && row < allCurrentResults.size()) {
                     allCurrentResults.remove(row);
@@ -1003,26 +1009,23 @@ public class ResultEntryPanel extends JPanel {
 
     private List<Object[]> createDesignSeedResults() {
         List<Object[]> list = new ArrayList<>();
-        if (currentStudent != null && "2510001319".equals(currentStudent.getRollNumber())) {
-            list.add(new Object[]{8, "CS102", "Database Management Systems", 100, 87.0, "A", "PASS"});
-            list.add(new Object[]{9, "CS103", "Data Structures & Algorithms", 100, 69.0, "C", "PASS"});
-            list.add(new Object[]{10, "CS104", "Computer Networks", 100, 80.0, "A", "PASS"});
-            list.add(new Object[]{11, "CS105", "Operating Systems", 100, 66.0, "C", "PASS"});
-            list.add(new Object[]{7, "CS107", "Computer Architecture And Organization", 100, 88.0, "A", "PASS"});
-            return list;
-        } else if (currentStudent != null && "2510001331".equals(currentStudent.getRollNumber())) {
-            list.add(new Object[]{6, "CS101", "Java Programming", 100, 90.0, "A", "PASS"});
-            list.add(new Object[]{7, "CS102", "Database Management Systems", 100, 86.0, "A-", "PASS"});
-            return list;
-        } else if (currentStudent != null && "2510001212".equals(currentStudent.getRollNumber())) {
-            list.add(new Object[]{9, "CS101", "Java Programming", 100, 76.0, "B", "PASS"});
-            return list;
+        if (currentStudent == null) return list;
+        List<Result> memResults = InMemoryDataStore.getInstance().getResultsByStudentId(currentStudent.getStudentId());
+        for (Result r : memResults) {
+            Subject s = r.getSubject();
+            int max = s != null ? s.getMaxMarks() : 100;
+            int pass = s != null ? s.getPassMarks() : 35;
+            String status = r.getMarksObtained() >= pass ? "PASS" : "FAIL";
+            list.add(new Object[]{
+                    r.getResultId(),
+                    s != null ? s.getSubjectCode() : "N/A",
+                    s != null ? s.getSubjectName() : "N/A",
+                    max,
+                    r.getMarksObtained(),
+                    r.getGrade(),
+                    status
+            });
         }
-
-        list.add(new Object[]{101, "CS101", "Java Programming", 100, 88.0, "B", "PASS"});
-        list.add(new Object[]{102, "CS102", "Database Management Systems", 100, 92.0, "A", "PASS"});
-        list.add(new Object[]{103, "CS103", "Data Structures & Algorithms", 100, 85.0, "A-", "PASS"});
-        list.add(new Object[]{104, "CS104", "Computer Networks", 100, 78.0, "B", "PASS"});
         return list;
     }
 
@@ -1074,13 +1077,7 @@ public class ResultEntryPanel extends JPanel {
     }
 
     private List<Subject> createDesignSeedSubjects() {
-        List<Subject> list = new ArrayList<>();
-        list.add(new Subject(1, "CS101", "Java Programming", 100, 35));
-        list.add(new Subject(2, "CS102", "Database Management Systems", 100, 35));
-        list.add(new Subject(3, "CS103", "Data Structures & Algorithms", 100, 35));
-        list.add(new Subject(4, "CS104", "Computer Networks", 100, 35));
-        list.add(new Subject(5, "CS105", "Operating Systems", 100, 35));
-        return list;
+        return InMemoryDataStore.getInstance().getAllSubjects();
     }
 
     private void updateSubjectMetrics() {

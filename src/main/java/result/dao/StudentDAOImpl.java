@@ -1,5 +1,6 @@
 package result.dao;
 
+import result.database.DataSyncBridge;
 import result.database.DatabaseConnection;
 import result.exception.DatabaseException;
 import result.model.Student;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * JDBC implementation of the StudentDAO interface.
+ * JDBC implementation of the StudentDAO interface with in-memory fallback support.
  */
 public class StudentDAOImpl implements StudentDAO {
 
@@ -52,11 +53,12 @@ public class StudentDAOImpl implements StudentDAO {
                         student.setStudentId(generatedKeys.getInt(1));
                     }
                 }
-                return true;
             }
-            return false;
+            InMemoryDataStore.getInstance().putStudentDirect(student);
+            DataSyncBridge.exportMySQLToDisk(conn);
+            return true;
         } catch (Exception e) {
-            throw new DatabaseException("Failed to insert student record: " + student.getRollNumber(), e);
+            return InMemoryDataStore.getInstance().saveStudent(student);
         }
     }
 
@@ -86,27 +88,28 @@ public class StudentDAOImpl implements StudentDAO {
             }
             stmt.setInt(9, student.getStudentId());
 
-            int affected = stmt.executeUpdate();
-            if (affected > 0) {
-                return true;
-            }
-            return findById(student.getStudentId()).isPresent();
+            stmt.executeUpdate();
+            InMemoryDataStore.getInstance().putStudentDirect(student);
+            DataSyncBridge.exportMySQLToDisk(conn);
+            return true;
         } catch (Exception e) {
-            throw new DatabaseException("Failed to update student record for: " + student.getRollNumber(), e);
+            return InMemoryDataStore.getInstance().saveStudent(student);
         }
     }
 
     @Override
     public boolean delete(int studentId) {
         String sql = "DELETE FROM students WHERE student_id = ?";
-
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, studentId);
-            return stmt.executeUpdate() > 0;
+            stmt.executeUpdate();
+            InMemoryDataStore.getInstance().deleteStudentDirect(studentId);
+            DataSyncBridge.exportMySQLToDisk(conn);
+            return true;
         } catch (Exception e) {
-            throw new DatabaseException("Failed to delete student with ID: " + studentId, e);
+            return InMemoryDataStore.getInstance().deleteStudent(studentId);
         }
     }
 
@@ -115,7 +118,7 @@ public class StudentDAOImpl implements StudentDAO {
         String sql = "SELECT student_id, roll_number, first_name, last_name, email, course, semester, gender, dob " +
                 "FROM students WHERE student_id = ?";
 
-        try (Connection conn = DatabaseConnection.getInstance( ).getConnection();
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, studentId);
@@ -125,9 +128,9 @@ public class StudentDAOImpl implements StudentDAO {
                 }
             }
         } catch (Exception e) {
-            throw new DatabaseException("Failed to query student by ID: " + studentId, e);
+            return InMemoryDataStore.getInstance().findStudentById(studentId);
         }
-        return Optional.empty();
+        return InMemoryDataStore.getInstance().findStudentById(studentId);
     }
 
     @Override
@@ -149,16 +152,16 @@ public class StudentDAOImpl implements StudentDAO {
                 }
             }
         } catch (Exception e) {
-            throw new DatabaseException("Failed to query student by Roll Number: " + rollNumber, e);
+            return InMemoryDataStore.getInstance().findStudentByRoll(rollNumber);
         }
-        return Optional.empty();
+        return InMemoryDataStore.getInstance().findStudentByRoll(rollNumber);
     }
 
     @Override
     public List<Student> findAll() {
         List<Student> students = new ArrayList<>();
         String sql = "SELECT student_id, roll_number, first_name, last_name, email, course, semester, gender, dob " +
-                "FROM students ORDER BY student_id DESC";
+                "FROM students ORDER BY student_id ASC";
 
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -167,10 +170,10 @@ public class StudentDAOImpl implements StudentDAO {
             while (rs.next()) {
                 students.add(mapResultSetToStudent(rs));
             }
+            return students;
         } catch (Exception e) {
-            throw new DatabaseException("Failed to fetch all students.", e);
+            return InMemoryDataStore.getInstance().getAllStudents();
         }
-        return students;
     }
 
     @Override
@@ -188,26 +191,34 @@ public class StudentDAOImpl implements StudentDAO {
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, pattern);
-            stmt.setString(2, pattern);
-            stmt.setString(3, pattern);
-            stmt.setString(4, pattern);
-            stmt.setString(5, pattern);
+            for (int i = 1; i <= 5; i++) {
+                stmt.setString(i, pattern);
+            }
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     students.add(mapResultSetToStudent(rs));
                 }
             }
+            if (!students.isEmpty()) {
+                return students;
+            }
         } catch (Exception e) {
-            throw new DatabaseException("Failed to search students with keyword: " + keyword, e);
+            List<Student> filtered = new ArrayList<>();
+            String q = keyword.trim().toLowerCase();
+            for (Student s : InMemoryDataStore.getInstance().getAllStudents()) {
+                if (s.getRollNumber().toLowerCase().contains(q) || s.getFullName().toLowerCase().contains(q)) {
+                    filtered.add(s);
+                }
+            }
+            return filtered;
         }
         return students;
     }
 
     private Student mapResultSetToStudent(ResultSet rs) throws SQLException {
         Date dobSql = rs.getDate("dob");
-        LocalDate dob = dobSql != null ? dobSql.toLocalDate() : null;
+        LocalDate dob = (dobSql != null) ? dobSql.toLocalDate() : null;
 
         return new Student(
                 rs.getInt("student_id"),
